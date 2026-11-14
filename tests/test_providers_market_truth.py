@@ -24,6 +24,7 @@ from src.providers.types import (
     ProviderHealth, ProviderStatus, Side,
 )
 from src.providers.universe import DynamicUniverse, UniverseBucket, UniverseCandidate
+from src.alerts.catalog_discovery import CatalogDiscoveryAlerts
 from src.service.config import load_config
 from src.service.market_data import MultiVenueMarketService
 
@@ -676,6 +677,7 @@ async def test_normal_market_service_discovers_ranks_persists_and_delists_market
             entry = MarketCatalogEntry(
                 instrument, "spot", "https://data-api.binance.vision/api/v3/ticker/24hr",
                 self.checked, self.checked - 5, 2_500_000, 0.05,
+                bid=.04995, ask=.05005,
                 abs_price_change_24h_pct=18.0, active=True, admitted=True,
             )
             return (MarketCatalogScope("binance", "spot", "https://data-api.binance.vision/api/v3/exchangeInfo+24hr",
@@ -701,8 +703,16 @@ async def test_normal_market_service_discovers_ranks_persists_and_delists_market
 
     provider = DynamicProvider()
     service.providers._providers = {"binance": provider}
+    sent = []
+
+    async def fake_send(key, message, at):
+        sent.append(message)
+        return True, "synthetic-id"
+
+    service.on_catalog_scope = CatalogDiscoveryAlerts(storage, {"enabled": True}, fake_send).observe
     try:
         first = await service.refresh_once()
+        assert sent == []  # the initial complete catalog is only a baseline
         first_id = "discovered:binance:binance-spot:spot:MEWUSDT"
         assert first["universe_size"] == 1
         assert service.instruments.get(first_id).active
@@ -713,6 +723,7 @@ async def test_normal_market_service_discovers_ranks_persists_and_delists_market
         provider.generation = 1
         service._last_catalog_refresh_ms = 0
         second = await service.refresh_once()
+        assert len(sent) == 1 and "PONKEUSDT" in sent[0]
         second_id = "discovered:binance:binance-spot:spot:PONKEUSDT"
         assert second["universe_size"] == 1, (second["errors"], service.instruments.all(), service.truth_engine.latest_bbo("discovered:binance:binance-spot:spot:PONKEUSDT"), service._catalog_health(), service.membership)
         assert not service.instruments.get(first_id).active
@@ -723,6 +734,7 @@ async def test_normal_market_service_discovers_ranks_persists_and_delists_market
         provider.generation = 2
         service._last_catalog_refresh_ms = 0
         third = await service.refresh_once()
+        assert len(sent) == 1  # incomplete scope cannot create a report
         assert third["universe_size"] == 0
         assert service.instruments.get(second_id).active  # unknown listing status is not treated as delisting
         assert service._catalog_health()["binance:spot"]["status"] == "stale"

@@ -159,6 +159,7 @@ class MultiVenueMarketService:
         now_ms = int(time.time() * 1000)
         errors: dict[str, str] = {}
         decision_rows: list[dict[str, Any]] = []
+        accepted_scopes: list[MarketCatalogScope] = []
         changed = False
         for provider, result in zip(providers, results, strict=True):
             if isinstance(result, BaseException):
@@ -240,11 +241,21 @@ class MultiVenueMarketService:
                             "receive_age_ms_at_catalog": max(0, now_ms - entry.received_at_ms),
                         },
                     })
+                accepted_scopes.append(snapshot)
                 changed = True
         if changed:
             self.repository.sync_provider_catalog(self.config["providers"], self.instruments, now_ms)
         if decision_rows:
             self.repository.save_market_discovery_decisions(decision_rows)
+        on_catalog_scope = getattr(self, "on_catalog_scope", None)
+        if on_catalog_scope is not None:
+            for snapshot in accepted_scopes:
+                try:
+                    await on_catalog_scope(snapshot, int(time.time() * 1000))
+                except asyncio.CancelledError:
+                    raise
+                except Exception as exc:
+                    self.log.warning("catalog_alert_failed", error=type(exc).__name__)
         return errors
 
     def _fresh_catalog_entries(self, now_ms: int) -> list[MarketCatalogEntry]:

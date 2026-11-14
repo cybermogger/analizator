@@ -22,6 +22,7 @@ from src.alerts.formatter import format_paper_recommendation, format_signal
 from src.alerts.multi_asset import MultiAssetAlertService
 from src.alerts.news import NewsAlertService
 from src.alerts.new_tokens import NewTokenAlertService
+from src.alerts.catalog_discovery import CatalogDiscoveryAlerts
 from src.alerts.telegram import TelegramClient
 from src.data.aggregation import RawParquetRotator
 from src.data.repository import MarketRepository
@@ -112,6 +113,10 @@ class AnalyzerService:
             self.events.on_event = self.news_alerts.consider
         self.new_token_alerts = NewTokenAlertService(self.storage,
             alert_cfg.get("new_tokens", {}), self._send_once)
+        self.catalog_alerts = CatalogDiscoveryAlerts(self.storage,
+            alert_cfg.get("catalog_discovery", {}), self._send_once)
+        if self.telegram.configured and alert_cfg.get("enabled", False):
+            self.market_data.on_catalog_scope = self.catalog_alerts.observe
         latest_telegram = self.repository.latest_telegram_event()
         self.last_alert_ms: int | None = int(latest_telegram["timestamp"]) if latest_telegram else None
         self.critical_errors = CriticalErrorNotifier(

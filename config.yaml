@@ -377,6 +377,12 @@ alerts:
   new_tokens:
     enabled: true
     max_per_day: 6
+  catalog_discovery:
+    enabled: true
+    max_per_day: 6
+    max_per_scope: 2
+    min_quote_turnover_24h: 1000000
+    max_spread_bps: 50
   alert_threshold: 40.0
   confirmation_cycles: 2
   realert_delta: 5.0
