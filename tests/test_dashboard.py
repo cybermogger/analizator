@@ -1,4 +1,5 @@
 import asyncio
+import time
 from types import SimpleNamespace
 
 from aiohttp.test_utils import TestClient, TestServer
@@ -19,6 +20,7 @@ def fake_service():
     }])
     events = SimpleNamespace(latest=lambda limit: [{
         "event_id": "evt-1", "event_type": "LISTING", "summary": "Official listing",
+        "credibility": .9, "authenticity_risk": False,
         "source_ids": ["official"], "evidence_urls": ["https://example.invalid/news"],
         "impacted_assets": [{"canonical_asset_id": "solana:bonk-contract"}],
         "payload_json": "must-not-leak",
@@ -26,7 +28,9 @@ def fake_service():
     onchain = SimpleNamespace(latest=lambda limit: [{"chain_id": "solana",
         "contract_address": "verified-mint", "symbol": "NEW", "status": "OBSERVE",
         "risk_flags": ["liquidity_unverified"], "private_payload": "must-not-leak"}])
-    return SimpleNamespace(market_analysis=market, events=events, onchain=onchain)
+    strategy = SimpleNamespace(latest_plans=lambda iid: [])
+    return SimpleNamespace(market_analysis=market, events=events, onchain=onchain,
+        strategy_shadow=strategy)
 
 
 def test_snapshot_whitelists_public_fields():
@@ -36,6 +40,22 @@ def test_snapshot_whitelists_public_fields():
     assert result["candidates"][0]["contract_address"] == "verified-mint"
     assert "must-not-leak" not in str(result)
     assert "не является вероятностью прибыли" in result["semantics"]
+
+
+def test_snapshot_exposes_only_fresh_unfilled_disciplined_plan():
+    service = fake_service()
+    now = int(time.time() * 1000)
+    plan = {"variant": "disciplined", "status": "PROPOSED", "direction": "LONG",
+        "instrument_id": "binance:spot:BONK-USDT", "venue": "binance-spot", "quote": "USDT",
+        "observed_at_ms": now - 1000, "expires_at_ms": now + 30_000,
+        "entry_reference": .00001, "stop": .000009, "target": .000012,
+        "notional": 100, "internal_secret": "must-not-leak"}
+    service.strategy_shadow.latest_plans = lambda iid: [{"plan": plan, "events": []}]
+    result = snapshot(service)
+    assert len(result["signals"]) == 1
+    assert "must-not-leak" not in str(result)
+    service.strategy_shadow.latest_plans = lambda iid: [{"plan": plan, "events": [{"type": "FILLED"}]}]
+    assert snapshot(service)["signals"] == []
 
 
 @pytest.mark.asyncio

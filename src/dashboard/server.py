@@ -14,6 +14,7 @@ SERVICE = web.AppKey("dashboard_service", object)
 def snapshot(service: Any) -> dict[str, Any]:
     now = int(time.time() * 1000)
     cards = []
+    signals = []
     for card in service.market_analysis.markets(30):
         candles = card.get("candles") or {}
         quality = card.get("candle_quality") or {}
@@ -28,8 +29,26 @@ def snapshot(service: Any) -> dict[str, Any]:
             "trends": {tf: candles.get(tf, {}).get("trend") for tf in ("15m", "1h", "4h")},
             "quality": {tf: quality.get(tf, {}).get("status") for tf in ("15m", "1h", "4h")},
         })
+        for record in service.strategy_shadow.latest_plans(str(card.get("instrument_id") or "")):
+            plan = record.get("plan") or {}
+            if (plan.get("variant") != "disciplined" or plan.get("status") != "PROPOSED"
+                    or plan.get("direction") != "LONG" or int(plan.get("expires_at_ms") or 0) <= now
+                    or record.get("events")):
+                continue
+            signals.append({
+                "instrument_id": plan.get("instrument_id"), "venue": plan.get("venue"),
+                "quote": plan.get("quote"), "direction": "LONG",
+                "observed_at_ms": plan.get("observed_at_ms"),
+                "expires_at_ms": plan.get("expires_at_ms"),
+                "entry_reference": plan.get("entry_reference"),
+                "stop": plan.get("stop"), "target": plan.get("target"),
+                "notional": plan.get("notional"),
+            })
     events = []
     for event in service.events.latest(15):
+        if (event.get("event_type") == "RUMOR" or event.get("authenticity_risk")
+                or float(event.get("credibility") or 0) < .7):
+            continue
         events.append({
             "event_id": event.get("event_id"), "event_type": event.get("event_type"),
             "summary": str(event.get("summary") or "")[:500],
@@ -52,7 +71,7 @@ def snapshot(service: Any) -> dict[str, Any]:
             "official_identity_confirmed": candidate.get("official_identity_confirmed"),
             "risk_flags": candidate.get("risk_flags", [])[:5],
         })
-    return {"as_of_ms": now, "markets": cards, "events": events,
+    return {"as_of_ms": now, "markets": cards, "signals": signals[:10], "events": events,
         "candidates": candidates, "market_count": len(cards), "event_count": len(events),
         "semantics": "Наблюдение и экспериментальные гипотезы; рейтинг покрытия не является вероятностью прибыли."}
 

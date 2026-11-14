@@ -33,6 +33,17 @@ function drawEvents(events) {
     row.append(meta); list.append(row);
   }
 }
+function drawSignals(signals) {
+  const list = $("signal-list"); list.replaceChildren();
+  if (!signals.length) { list.append(el("div", "empty", "Сейчас нет свежих экспериментальных сетапов")); return; }
+  for (const signal of signals) {
+    const row = el("article", "event"); row.append(el("div", "event-type", signal.direction || "СЕТАП"));
+    const main = el("div", "event-main"); main.append(el("strong", "", signal.instrument_id || "—"));
+    main.append(el("p", "", `Ориентир: ${price(signal.entry_reference)} · Стоп: ${price(signal.stop)} · Цель: ${price(signal.target)} · Номинал до ${price(signal.notional)} ${signal.quote || ""}`));
+    main.append(el("p", "", "Вход только по новой свежей котировке до срока действия; ордер не отправлен."));
+    row.append(main); row.append(el("div", "event-meta", `до ${new Date(signal.expires_at_ms).toLocaleTimeString("ru-RU")}`)); list.append(row);
+  }
+}
 function drawCandidates(candidates) {
   const list = $("candidate-list"); list.replaceChildren();
   if (!candidates.length) { list.append(el("div", "empty", "Ончейн-источники пока не дали проверенных кандидатов")); return; }
@@ -56,7 +67,8 @@ async function refresh() {
     $("updated").textContent = `Последнее обновление: ${new Date(data.as_of_ms).toLocaleTimeString("ru-RU")}`;
     $("connection").textContent = "СВЯЗЬ УСТАНОВЛЕНА"; $("connection").classList.remove("offline");
     $("system-status").textContent = "На связи"; $("system-note").textContent = markets.length ? "Данные доступны для просмотра" : "Ожидаем первый цикл анализа";
-    drawMarkets(); drawEvents(Array.isArray(data.events) ? data.events : []);
+    drawMarkets(); drawSignals(Array.isArray(data.signals) ? data.signals : []);
+    drawEvents(Array.isArray(data.events) ? data.events : []);
     drawCandidates(Array.isArray(data.candidates) ? data.candidates : []);
   } catch {
     $("connection").textContent = "НЕТ СОЕДИНЕНИЯ"; $("connection").classList.add("offline");
