@@ -19,6 +19,9 @@ from src.alerts.commands import TelegramCommandService
 from src.alerts.critical import CriticalErrorNotifier
 from src.alerts.feed_status import FeedStatusNotifier
 from src.alerts.formatter import format_paper_recommendation, format_signal
+from src.alerts.multi_asset import MultiAssetAlertService
+from src.alerts.news import NewsAlertService
+from src.alerts.new_tokens import NewTokenAlertService
 from src.alerts.telegram import TelegramClient
 from src.data.aggregation import RawParquetRotator
 from src.data.repository import MarketRepository
@@ -98,6 +101,17 @@ class AnalyzerService:
             fast_event_strength=alert_cfg.get("fast_event_strength", 70),
         )
         self.telegram = TelegramClient(os.getenv("TELEGRAM_BOT_TOKEN"), os.getenv("TELEGRAM_CHAT_ID"), config["service"]["request_timeout_seconds"])
+        self.multi_asset_alerts = MultiAssetAlertService(
+            self.storage, alert_cfg.get("multi_asset", {}), self._send_once,
+            excluded_bases=config["market"]["assets"],
+        )
+        if self.telegram.configured and alert_cfg.get("enabled", False):
+            self.market_analysis.on_plans = self.multi_asset_alerts.consider
+        self.news_alerts = NewsAlertService(self.storage, alert_cfg.get("news", {}), self._send_once)
+        if self.telegram.configured and alert_cfg.get("enabled", False):
+            self.events.on_event = self.news_alerts.consider
+        self.new_token_alerts = NewTokenAlertService(self.storage,
+            alert_cfg.get("new_tokens", {}), self._send_once)
         latest_telegram = self.repository.latest_telegram_event()
         self.last_alert_ms: int | None = int(latest_telegram["timestamp"]) if latest_telegram else None
         self.critical_errors = CriticalErrorNotifier(

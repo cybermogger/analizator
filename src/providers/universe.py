@@ -49,9 +49,15 @@ class DynamicUniverse:
             UniverseBucket(key): int(value)
             for key, value in dict(settings.get("bucket_minimums", {})).items()
         }
+        self.deep_bucket_minimums = {
+            UniverseBucket(key): int(value)
+            for key, value in dict(settings.get("deep_bucket_minimums", {})).items()
+        }
         self.weights = {str(key): float(value) for key, value in dict(settings.get("weights", {})).items()}
         if not 1 <= self.max_scan <= 150 or not 1 <= self.max_deep <= min(30, self.max_scan):
             raise ValueError("invalid universe budgets")
+        if any(value < 0 for value in self.deep_bucket_minimums.values()) or sum(self.deep_bucket_minimums.values()) > self.max_deep:
+            raise ValueError("invalid deep bucket minimums")
         if abs(sum(self.weights.values()) - 1.0) > 1e-9:
             raise ValueError("universe score weights must sum to 1")
 
@@ -85,7 +91,8 @@ class DynamicUniverse:
 
         # Scores compare ordinal ranks only within the same quote asset. USD, USDT and
         # USDC turnover/depth are never treated as equal units without an FX feed.
-        metric_values: dict[str, dict[str, float]] = {name: {} for name in (*self.weights, "spread")}
+        metric_values: dict[str, dict[str, float]] = {name: {} for name in (
+            "liquidity", "volume", "change_magnitude", "derivatives_activity", "freshness", "spread")}
         quote_groups: dict[str, list[UniverseCandidate]] = {}
         for item in valid:
             quote_groups.setdefault(item.quote_asset.upper(), []).append(item)
@@ -136,7 +143,21 @@ class DynamicUniverse:
                 selected.append((item, score))
                 selected_ids.add(item.instrument_id)
         selected.sort(key=lambda pair: (-pair[1], pair[0].instrument_id))
-        deep_ids = {item.instrument_id for item, _ in selected[:self.max_deep]}
+        # Reserve deep analysis slots for the spot path that can produce the
+        # experimental alerts. Selection remains by exact venue instrument.
+        deep_ids: set[str] = set()
+        for bucket, minimum in self.deep_bucket_minimums.items():
+            chosen = 0
+            for item, _ in (pair for pair in selected if pair[0].bucket == bucket):
+                if chosen >= minimum:
+                    break
+                if len(deep_ids) < self.max_deep and item.instrument_id not in deep_ids:
+                    deep_ids.add(item.instrument_id)
+                    chosen += 1
+        for item, _ in selected:
+            if len(deep_ids) >= self.max_deep:
+                break
+            deep_ids.add(item.instrument_id)
         return tuple(
             UniverseMembership(
                 instrument_id=item.instrument_id,

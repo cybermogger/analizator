@@ -867,7 +867,17 @@ class MultiAssetAnalysisService:
                         self._observations_saved += 1
                     strategy = getattr(self, "strategy_shadow", None)
                     if strategy is not None:
-                        strategy.evaluate(card)
+                        plans = strategy.evaluate(card)
+                        on_plans = getattr(self, "on_plans", None)
+                        if on_plans is not None:
+                            try:
+                                await on_plans(plans, card, self._now_ms())
+                            except asyncio.CancelledError:
+                                raise
+                            except Exception as exc:
+                                # Delivery is separate from market computation.
+                                self._failures += 1
+                                self._last_cycle_error = f"multi-asset alert: {type(exc).__name__}"
                     self._instrument_errors.pop(instrument.instrument_id, None)
             except asyncio.CancelledError:
                 raise

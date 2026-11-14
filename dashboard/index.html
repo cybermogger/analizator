@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a0d0f">
+  <title>ANALIZATOR — рынок без шума</title>
+  <link rel="stylesheet" href="/app.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="ambient" aria-hidden="true"></div>
+  <div class="shell">
+    <aside class="rail" aria-label="Навигация">
+      <a class="brand" href="/" aria-label="Analizator, на главную"><span class="brand-mark">A<span>.</span></span><span class="brand-word">ANALIZATOR</span></a>
+      <div class="rail-label">РАБОЧЕЕ ПРОСТРАНСТВО</div>
+      <nav>
+        <a class="nav-link active" href="#overview"><span class="nav-icon">◫</span> Обзор <span class="nav-num">01</span></a>
+        <a class="nav-link" href="#markets"><span class="nav-icon">◈</span> Рынки <span class="nav-num">02</span></a>
+        <a class="nav-link" href="#events"><span class="nav-icon">✳</span> События <span class="nav-num">03</span></a>
+        <a class="nav-link" href="#candidates"><span class="nav-icon">◎</span> Новые токены <span class="nav-num">04</span></a>
+      </nav>
+      <div class="rail-bottom"><span class="pulse"></span><span>Локальный терминал<br><small>Только чтение · без сделок</small></span></div>
+    </aside>
+    <main id="overview">
+      <header class="topbar"><div class="crumb">РАБОЧЕЕ ПРОСТРАНСТВО <span>/</span> ОБЗОР РЫНКА</div><div class="top-actions"><span id="clock">—</span><span id="connection" class="connection">ОЖИДАНИЕ ДАННЫХ</span></div></header>
+      <section class="hero">
+        <div class="eyebrow"><span class="eyebrow-line"></span> СИСТЕМА НАБЛЮДЕНИЯ / V1.0</div>
+        <h1>Видеть рынок.<br><em>Действовать осознанно.</em></h1>
+        <p>Многомонетный анализ, проверяемые события и точные инструменты. Данные обновляются автоматически, каждый вывод можно проследить до источника.</p>
+        <div class="hero-foot"><span class="live-dot"></span><span id="updated">Последнее обновление: —</span><span class="hero-sep"></span><span>Экспериментальные сигналы · без гарантии доходности</span></div>
+        <div class="hero-art" aria-hidden="true"><div class="orb orb-one"></div><div class="orb orb-two"></div><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><span class="art-cross">+</span></div>
+      </section>
+      <section class="metrics" aria-label="Сводка">
+        <div class="metric"><span class="metric-label">ИНСТРУМЕНТЫ В ОБЗОРЕ</span><strong id="market-count">—</strong><small>Точные пары и площадки</small></div>
+        <div class="metric"><span class="metric-label">СОБЫТИЯ В ЛЕНТЕ</span><strong id="event-count">—</strong><small>С проверяемыми источниками</small></div>
+        <div class="metric accent"><span class="metric-label">СТАТУС СИСТЕМЫ</span><strong id="system-status">Ожидание</strong><small id="system-note">Подключение к локальному анализатору</small></div>
+      </section>
+      <section id="markets" class="panel market-panel">
+        <div class="panel-head"><div><div class="section-kicker">01 / АНАЛИТИКА</div><h2>Карта рынков</h2><p>Наблюдения по отдельным инструментам. Рейтинг отражает полноту данных и согласованность трендов.</p></div><div class="market-tools"><label class="search-label"><span>⌕</span><input id="market-search" type="search" placeholder="Поиск монеты или пары" aria-label="Поиск монеты или пары"></label><select id="market-filter" aria-label="Тип рынка"><option value="all">Все рынки</option><option value="spot">Спот</option><option value="perp">Фьючерсы</option></select></div></div>
+        <div class="table-scroll"><table><thead><tr><th>ИНСТРУМЕНТ</th><th>ЦЕНА</th><th>ТРЕНД 15М / 1Ч / 4Ч</th><th>ДАННЫЕ</th><th>НАБЛЮДЕНИЕ</th></tr></thead><tbody id="market-rows"><tr><td colspan="5" class="empty">Ожидание рыночных данных…</td></tr></tbody></table></div>
+        <div class="panel-foot">Рейтинг наблюдения не является вероятностью роста или прибыли. Для исполнения нужна отдельная проверка ликвидности и издержек.</div>
+      </section>
+      <section id="events" class="panel news-panel"><div class="panel-head"><div><div class="section-kicker">02 / КОНТЕКСТ</div><h2>События рынка</h2><p>Факты и первоисточники. Возможное влияние оценивается как сценарий, а не предсказание цены.</p></div><span class="section-pill">ПЕРВОИСТОЧНИКИ</span></div><div id="event-list" class="event-list"><div class="empty">Ожидание новостей…</div></div></section>
+      <section id="candidates" class="panel news-panel"><div class="panel-head"><div><div class="section-kicker">03 / ОБНАРУЖЕНИЕ</div><h2>Новые токены</h2><p>Точная сеть и контракт, подтверждённая ликвидность и риски. «На наблюдении» не означает рекомендацию купить.</p></div><span class="section-pill">ТОЧНЫЙ КОНТРАКТ</span></div><div id="candidate-list" class="event-list"><div class="empty">Ожидание проверенных ончейн-кандидатов…</div></div></section>
+      <footer>ANALIZATOR <span>·</span> Исследовательский терминал <span>·</span> Сигналы экспериментальны, реальные ордера не отправляются.</footer>
+    </main>
+  </div>
+</body>
+</html>

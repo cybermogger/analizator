@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timezone
 import json
 from pathlib import Path
@@ -72,6 +73,35 @@ def test_unconfirmed_rumor_never_becomes_trade_signal():
     assert event.credibility < 0.3
     assert event.confidence < 0.3
     assert event.as_dict()["trade_action"] is None
+
+
+def test_ingest_notifies_once_after_persistence_without_blocking_on_delivery(tmp_path: Path):
+    storage = SQLiteStorage(tmp_path / "event-notify.db")
+    config = {"events": {"enabled": True, "sources": {"official-project": {
+        "source_tier": "official_project", "adapter": "rss_atom", "official": True,
+        "enabled": False, "url": "https://example.invalid/feed",
+        "allowed_domains": ["example.invalid"],
+    }}, "entities": [{
+        "project_id": "official-trump", "canonical_asset_id": f"solana:{TRUMP_CONTRACT}",
+        "name": "Official Trump", "tickers": ["TRUMP"],
+        "contracts": [{"chain_id": "solana", "address": TRUMP_CONTRACT}],
+        "official_domains": ["gettrumpmemes.com"],
+    }]}}
+    service = EventIntelligenceService(config, storage)
+    called = []
+
+    async def failing_notification(event, now):
+        called.append(event.event_id)
+        raise RuntimeError("synthetic delivery failure")
+
+    service.on_event = failing_notification
+    item = raw("official-event", "Official Trump listing", source="official-project",
+        tier=SourceTier.OFFICIAL_PROJECT, authenticity=AuthenticityState.VERIFIED)
+    first = asyncio.run(service.ingest(item))
+    assert asyncio.run(service.ingest(item)).event_id == first.event_id
+    assert called == [first.event_id]
+    assert service.repository.latest_events(1)[0]["event_id"] == first.event_id
+    storage.close()
 
 
 def test_compromised_official_account_is_capped_until_independent_confirmation():

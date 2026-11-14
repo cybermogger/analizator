@@ -89,6 +89,14 @@ class EventIntelligenceService:
             confirmations=event.confirmation_count,
             assets=[item.canonical_asset_id for item in event.impacted_assets],
         )
+        on_event = getattr(self, "on_event", None)
+        if on_event is not None and not duplicate:
+            try:
+                await on_event(event, int(time.time() * 1000))
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                self.log.warning("event_notification_failed", error=safe_exception(exc))
         return event
 
     async def poll_once(self) -> list[NormalizedEvent]:

@@ -1,6 +1,8 @@
 # Multi-venue Crypto Intelligence Analyzer
 
-Production-oriented, read-only 24/7 analyzer. The established **SOL/HYPE signal and ML pipeline remains Hyperliquid-based and unchanged**. Multi-venue prices, Event Intelligence, and the separate on-chain candidate pipeline are diagnostic context; none is an input to the current trading models.
+Production-oriented, read-only 24/7 analyzer. The established **SOL/HYPE signal and ML pipeline remains Hyperliquid-based and unchanged**. Multi-venue prices, Event Intelligence, and the separate on-chain candidate pipeline are diagnostic context; none is an input to the current trading models. A separate experimental spot setup alert now covers eligible instruments beyond SOL/HYPE, including liquid exchange-listed memecoins, under strict freshness and daily/hourly caps; it is not a calibrated probability or a proven edge.
+
+The standalone local dashboard is available at `http://127.0.0.1:8081` when the daemon runs. It shows up to 30 exact market instruments, source-linked events and on-chain candidates. It binds to loopback only and is separate from the Telegram Mini App. See [Phase 09](docs/phases/09-expanded-alerts-dashboard.md) for eligibility, news/new-token reports and current deployment limits.
 
 The service never places orders and never asks for a wallet, private key, seed phrase, or Hyperliquid API wallet. Telegram and optional read-only feed credentials are environment-only.
 

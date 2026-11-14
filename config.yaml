@@ -18,6 +18,11 @@ mini_app:
   allowed_user_ids: []
   init_data_max_age_seconds: 300
 
+dashboard:
+  enabled: true
+  host: 127.0.0.1
+  port: 8081
+
 market:
   assets: [SOL, HYPE]
   context_asset: BTC
@@ -159,7 +164,9 @@ universe:
     majors_l1: 2
     derivatives_movers: 2
     dex_memecoin_candidates: 0
-    liquid_spot_candidates: 0
+    liquid_spot_candidates: 12
+  deep_bucket_minimums:
+    liquid_spot_candidates: 12
   weights:
     liquidity: 0.20
     volume: 0.30
@@ -357,6 +364,19 @@ onchain:
       topics: []
 
 alerts:
+  # Experimental spot alerts for selected deep-watch markets beyond SOL/HYPE.
+  # The setup score is not a calibrated probability; messages include costs and TTL.
+  multi_asset:
+    enabled: true
+    max_per_hour: 4
+    max_per_day: 20
+  news:
+    enabled: true
+    min_credibility: 0.7
+    max_per_day: 12
+  new_tokens:
+    enabled: true
+    max_per_day: 6
   alert_threshold: 40.0
   confirmation_cycles: 2
   realert_delta: 5.0

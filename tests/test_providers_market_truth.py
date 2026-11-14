@@ -774,6 +774,29 @@ def test_dynamic_universe_enforces_scan_deep_and_provider_budgets():
                for provider, tiers in plan.items())
 
 
+def test_deep_watchlist_reserves_spot_analysis_slots():
+    instruments = InstrumentRegistry(tuple(
+        Instrument(f"binance:{'spot' if index < 3 else 'perpetual'}:COIN{index}-USDT",
+            f"unresolved:binance:COIN{index}", "binance", "binance-spot" if index < 3 else "binance-usdm",
+            MarketType.SPOT if index < 3 else MarketType.PERPETUAL,
+            f"COIN{index}", "USDT", f"COIN{index}USDT", 4, 4)
+        for index in range(8)))
+    settings = {"max_scan_instruments": 8, "max_deep_watchlist": 4,
+        "bucket_minimums": {"liquid_spot_candidates": 2},
+        "deep_bucket_minimums": {"liquid_spot_candidates": 2},
+        "weights": {"liquidity": 0.0, "volume": 1.0, "change_magnitude": 0.0,
+            "derivatives_activity": 0.0, "freshness": 0.0}}
+    universe = DynamicUniverse(instruments, settings)
+    candidates = [UniverseCandidate(item.instrument_id,
+        UniverseBucket.LIQUID_SPOT_CANDIDATES if item.market_type == MarketType.SPOT else UniverseBucket.DERIVATIVES_MOVERS,
+        1000, 10 + index * 100, 1, 1, 1, quote_asset="USDT")
+        for index, item in enumerate(instruments.all())]
+    membership = universe.select(candidates)
+    deep = [item for item in membership if item.deep_watchlist]
+    assert len(deep) == 4
+    assert sum(item.bucket == UniverseBucket.LIQUID_SPOT_CANDIDATES for item in deep) >= 2
+
+
 def test_additive_storage_v5_catalog_lineage_and_duplicate_idempotency(tmp_path: Path):
     config, instruments = loaded()
     storage = SQLiteStorage(tmp_path / "phase1.db")

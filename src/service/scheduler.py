@@ -56,6 +56,15 @@ async def run_daemon(service: AnalyzerService) -> None:
     runtime_heartbeat = heartbeat_path(service.config["storage"]["sqlite_path"])
     write_heartbeat(runtime_heartbeat, "starting", service)
     mini_app_runner = None
+    dashboard_runner = None
+    dashboard_settings = service.config.get("dashboard", {})
+    if dashboard_settings.get("enabled", False):
+        try:
+            from src.dashboard.server import start_dashboard
+            dashboard_runner = await start_dashboard(service, dashboard_settings)
+            log.info("local_dashboard_started", host=dashboard_settings.get("host"), port=dashboard_settings.get("port"))
+        except Exception as exc:
+            log.error("local_dashboard_unavailable", error=safe_exception(exc, 300))
     mini_app_settings = service.config.get("mini_app", {})
     if mini_app_settings.get("enabled", True):
         try:
@@ -69,6 +78,8 @@ async def run_daemon(service: AnalyzerService) -> None:
     multi_venue_task = asyncio.create_task(service.market_data.run_forever(), name="multi-venue-market-data")
     event_task = asyncio.create_task(service.events.run_forever(), name="event-intelligence")
     onchain_task = asyncio.create_task(service.onchain.run_forever(), name="onchain-intelligence")
+    new_token_task = asyncio.create_task(service.new_token_alerts.run_forever(service.onchain),
+        name="new-token-reports") if service.telegram.configured and service.config.get("alerts", {}).get("enabled", False) else None
     analysis_task = _start_market_analysis_worker(service)
     command_task = asyncio.create_task(service.telegram_commands.run_forever(), name="telegram-commands")
     interval = float(service.config["service"]["analysis_interval_seconds"])
@@ -113,6 +124,8 @@ async def run_daemon(service: AnalyzerService) -> None:
                 retrain_task = None
             await asyncio.sleep(max(1.0, interval - (time.monotonic() - started)))
     finally:
+        if dashboard_runner is not None:
+            await dashboard_runner.cleanup()
         if mini_app_runner is not None:
             await mini_app_runner.cleanup()
         with contextlib.suppress(OSError):
@@ -125,12 +138,15 @@ async def run_daemon(service: AnalyzerService) -> None:
         await service.market_data.stop()
         await service.events.stop()
         await service.onchain.stop()
+        service.new_token_alerts.stop()
         await service.market_analysis.stop()
         await service.telegram_commands.stop()
         ws_task.cancel()
         multi_venue_task.cancel()
         event_task.cancel()
         onchain_task.cancel()
+        if new_token_task is not None:
+            new_token_task.cancel()
         command_task.cancel()
         if analysis_task is not None:
             analysis_task.cancel()
@@ -142,6 +158,9 @@ async def run_daemon(service: AnalyzerService) -> None:
             await event_task
         with contextlib.suppress(asyncio.CancelledError):
             await onchain_task
+        if new_token_task is not None:
+            with contextlib.suppress(asyncio.CancelledError):
+                await new_token_task
         if analysis_task is not None:
             with contextlib.suppress(asyncio.CancelledError):
                 await analysis_task

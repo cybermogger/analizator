@@ -9,6 +9,7 @@ from types import SimpleNamespace
 import pytest
 
 from src.alerts.commands import TelegramCommandService
+from src.alerts.multi_asset import MultiAssetAlertService
 from src.data.repository import MarketRepository
 from src.data.storage import SQLiteStorage
 from src.providers.base import DerivativesDataProvider, ProviderCapabilityError
@@ -197,6 +198,29 @@ def test_normal_nonlegacy_spot_card_creates_frozen_shadow_variants(tmp_path):
     assert all(item["plan"]["instrument_id"] == instrument.instrument_id for item in plans)
     assert all(item["plan"]["signal_anchor_ms"] <= NOW for item in plans)
     assert shadow.summary()["baseline"]["status"] == "NOT_EVALUABLE"
+    db.close()
+
+
+def test_normal_spot_cycle_routes_one_bounded_alert_without_network(tmp_path):
+    instrument = make_instrument("binance", "spot", "BONK", "USDT", "BONKUSDT")
+    data, _ = make_market_data(instrument)
+    db = SQLiteStorage(tmp_path / "route.db")
+    service = MultiAssetAnalysisService(data, {"instruments_per_cycle": 1})
+    service._now_ms = lambda: NOW + 1000
+    service.strategy_shadow = StrategyShadow(db)
+    sent = []
+
+    async def fake_send(key, message, at):
+        sent.append(message)
+        return True, "synthetic-id"
+
+    service.on_plans = MultiAssetAlertService(db, {"enabled": True}, fake_send,
+        excluded_bases=("SOL", "HYPE")).consider
+    asyncio.run(service.refresh_once())
+    assert len(sent) == 1
+    assert "BONK" in sent[0] and "Экспериментальный" in sent[0]
+    asyncio.run(service.refresh_once())
+    assert len(sent) == 1
     db.close()
 
 
