@@ -63,6 +63,7 @@ def test_news_alert_rejects_unverified_stale_and_nonimpact(tmp_path):
         (replace(event, authenticity_risk=True), now),
         (replace(event, high_impact=False), now),
         (replace(event, event_type=EventType.RUMOR), now),
+        (replace(event, first_published_at_ms=now - 86_400_001), now),
         (event, now + 3_600_002),
     ):
         assert not asyncio.run(alerts.consider(candidate, at))

@@ -184,6 +184,13 @@ events:
     enabled: false
     purpose: extraction_classification_summary_only
   entities:
+    - project_id: ethereum
+      canonical_asset_id: native:ethereum
+      name: Ethereum
+      tickers: [ETH]
+      contracts: []
+      official_account_ids: []
+      official_domains: [blog.ethereum.org, ethereum.org]
     - project_id: solana
       canonical_asset_id: native:solana
       name: Solana
@@ -214,6 +221,19 @@ events:
       official_account_ids: []
       official_domains: [gettrumpmemes.com]
   sources:
+    ethereum_foundation_blog:
+      adapter: rss_atom
+      source_tier: official_project
+      official: true
+      enabled: true
+      url: https://blog.ethereum.org/en/feed.xml
+      allowed_domains: [blog.ethereum.org]
+      author_id: ethereum-foundation-blog
+      project_id: ethereum
+      language: en
+      request_timeout_seconds: 8
+      poll_interval_seconds: 300
+      max_items_per_poll: 30
     official_x:
       adapter: x_filtered_stream
       source_tier: official_project

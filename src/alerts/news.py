@@ -19,6 +19,7 @@ _IMPACT = {
     EventType.OUTAGE: "Доступность торгов или вывода может ухудшиться; проверь статус площадки.",
     EventType.MACRO: "Возможна волатильность всего рынка через ставки и риск-аппетит; направление неизвестно.",
     EventType.OFFICIAL_TOKEN_LAUNCH: "Новый актив может быть крайне волатилен; проверь контракт, ликвидность и условия торгов.",
+    EventType.PROTOCOL_UPGRADE: "Обновление сети может изменить комиссии, пропускную способность или риски исполнения; рыночная реакция и направление цены неизвестны.",
 }
 
 
@@ -41,6 +42,7 @@ class NewsAlertService:
             and event.credibility >= min_credibility and event.event_type in _IMPACT
             and event.evidence_urls and event.source_ids
             and 0 <= now_ms - event.latest_received_at_ms <= 3_600_000
+            and 0 <= now_ms - event.first_published_at_ms <= 86_400_000
             and (event.impacted_assets or event.event_type in (EventType.MACRO, EventType.REGULATORY)))
 
     @staticmethod

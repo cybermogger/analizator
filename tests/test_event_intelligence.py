@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 import sqlite3
+import yaml
 
 import pytest
 
@@ -408,6 +409,35 @@ def test_rss_parser_preserves_payload_timestamps_hash_and_latency():
     assert event.ingestion_latency_ms == 3000
     assert len(event.content_hash) == 64
     assert event.payload["guid"] == "one"
+
+
+def test_configured_ethereum_foundation_feed_resolves_exact_eth_and_mainnet_only():
+    config = yaml.safe_load((Path(__file__).resolve().parents[1] / "config.yaml").read_text(encoding="utf-8"))
+    settings = config["events"]["sources"]["ethereum_foundation_blog"]
+    assert settings["enabled"] and settings["official"]
+    assert settings["url"] == "https://blog.ethereum.org/en/feed.xml"
+    entities = tuple(EventIntelligenceService._entity(value) for value in config["events"]["entities"])
+    source = RSSAtomSource("ethereum_foundation_blog", settings, EntityResolver(entities))
+    received = ms("2026-11-15T12:00:00Z")
+    body = """<rss><channel>
+      <item><guid>mainnet-upgrade</guid><title>Ethereum mainnet upgrade scheduled</title>
+      <description>Protocol changes and rollout details</description>
+      <link>https://blog.ethereum.org/en/2026/11/15/mainnet-upgrade</link>
+      <pubDate>Sun, 15 Nov 2026 11:00:00 GMT</pubDate></item>
+      <item><guid>testnet-upgrade</guid><title>Ethereum testnet upgrade scheduled</title>
+      <description>Testing only</description>
+      <link>https://blog.ethereum.org/en/2026/11/15/testnet-upgrade</link>
+      <pubDate>Sun, 15 Nov 2026 11:00:00 GMT</pubDate></item>
+    </channel></rss>"""
+    mainnet, testnet = source.parse(body, received)
+    assert mainnet.authenticity is AuthenticityState.VERIFIED
+    assert mainnet.explicit_project_id == "ethereum"
+    main_event = EventIntelligencePipeline(EntityResolver(entities)).ingest(mainnet)
+    assert main_event.event_type is EventType.PROTOCOL_UPGRADE
+    assert main_event.high_impact
+    assert [asset.canonical_asset_id for asset in main_event.impacted_assets] == ["native:ethereum"]
+    test_event = EventIntelligencePipeline(EntityResolver(entities)).ingest(testnet)
+    assert not test_event.high_impact
 
 
 def test_event_schema_v5_to_v6_is_additive_and_integrity_ok(tmp_path: Path):

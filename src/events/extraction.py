@@ -25,6 +25,7 @@ class JSONLLM(Protocol):
 _PATTERNS: tuple[tuple[EventType, tuple[str, ...]], ...] = (
     (EventType.HACK_EXPLOIT, ("hack", "exploit", "drained", "security incident", "vulnerability")),
     (EventType.DELISTING, ("delist", "remove trading", "trading will cease")),
+    (EventType.PROTOCOL_UPGRADE, ("mainnet upgrade", "mainnet hard fork", "mainnet fork", "upgrade on mainnet")),
     (EventType.LISTING, ("listing", "list ", "trading opens", "add support for")),
     (EventType.OFFICIAL_TOKEN_LAUNCH, ("official meme", "official token", "token launch", "launching my")),
     (EventType.REGULATORY, ("regulation", "regulatory", "sec ", "lawsuit", "approval", "deadline")),
@@ -58,6 +59,7 @@ _HORIZONS: dict[EventType, tuple[str, ...]] = {
     EventType.OFFICIAL_TOKEN_LAUNCH: ("minutes", "hours", "days"),
     EventType.MACRO: ("minutes", "hours"),
     EventType.OUTAGE: ("minutes", "hours"),
+    EventType.PROTOCOL_UPGRADE: ("hours", "days"),
 }
 
 
@@ -97,6 +99,7 @@ class DeterministicExtractor:
                 EventType.ETF,
                 EventType.OUTAGE,
                 EventType.MACRO,
+                EventType.PROTOCOL_UPGRADE,
             },
         )
 
