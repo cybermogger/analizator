@@ -148,12 +148,22 @@ class DynamicUniverse:
         deep_ids: set[str] = set()
         for bucket, minimum in self.deep_bucket_minimums.items():
             chosen = 0
-            for item, _ in (pair for pair in selected if pair[0].bucket == bucket):
-                if chosen >= minimum:
-                    break
-                if len(deep_ids) < self.max_deep and item.instrument_id not in deep_ids:
-                    deep_ids.add(item.instrument_id)
-                    chosen += 1
+            bucket_items = [pair for pair in selected if pair[0].bucket == bucket]
+            # Symbol diversity only controls selection priority. It never joins
+            # instruments or establishes cross-venue asset identity.
+            passes = (True, False) if bucket is UniverseBucket.LIQUID_SPOT_CANDIDATES else (False,)
+            seen_bases: set[str] = set()
+            for unique_base_only in passes:
+                for item, _ in bucket_items:
+                    if chosen >= minimum:
+                        break
+                    base = self.instruments.get(item.instrument_id).base.upper()
+                    if unique_base_only and base in seen_bases:
+                        continue
+                    if len(deep_ids) < self.max_deep and item.instrument_id not in deep_ids:
+                        deep_ids.add(item.instrument_id)
+                        seen_bases.add(base)
+                        chosen += 1
         for item, _ in selected:
             if len(deep_ids) >= self.max_deep:
                 break

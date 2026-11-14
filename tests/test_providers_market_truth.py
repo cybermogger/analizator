@@ -809,6 +809,34 @@ def test_deep_watchlist_reserves_spot_analysis_slots():
     assert sum(item.bucket == UniverseBucket.LIQUID_SPOT_CANDIDATES for item in deep) >= 2
 
 
+def test_deep_spot_reserve_prefers_distinct_symbols_before_extra_venue_pair():
+    entries = (("binance", "SOL", MarketType.SPOT, 600),
+        ("kraken", "SOL", MarketType.SPOT, 500),
+        ("binance", "BONK", MarketType.SPOT, 400),
+        ("binance", "WIF", MarketType.SPOT, 300),
+        ("binance", "BTC", MarketType.PERPETUAL, 700))
+    instruments = InstrumentRegistry(tuple(Instrument(
+        f"{provider}:{kind.value}:{base}-USDT", f"unresolved:{provider}:{base}",
+        provider, f"{provider}-{kind.value}", kind, base, "USDT", f"{base}USDT", 4, 4)
+        for provider, base, kind, _ in entries))
+    universe = DynamicUniverse(instruments, {
+        "max_scan_instruments": 5, "max_deep_watchlist": 4,
+        "deep_bucket_minimums": {"liquid_spot_candidates": 3},
+        "weights": {"volume": 1.0},
+    })
+    candidates = [UniverseCandidate(
+        f"{provider}:{kind.value}:{base}-USDT",
+        UniverseBucket.LIQUID_SPOT_CANDIDATES if kind is MarketType.SPOT else UniverseBucket.DERIVATIVES_MOVERS,
+        None, turnover, None, None, None, quote_asset="USDT")
+        for provider, base, kind, turnover in entries]
+    deep = [item for item in universe.select(candidates) if item.deep_watchlist]
+    spot_bases = [instruments.get(item.instrument_id).base for item in deep
+        if item.bucket is UniverseBucket.LIQUID_SPOT_CANDIDATES]
+    assert len(deep) == 4
+    assert set(spot_bases) == {"SOL", "BONK", "WIF"}
+    assert len(spot_bases) >= 3
+
+
 def test_additive_storage_v5_catalog_lineage_and_duplicate_idempotency(tmp_path: Path):
     config, instruments = loaded()
     storage = SQLiteStorage(tmp_path / "phase1.db")

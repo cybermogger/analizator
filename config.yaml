@@ -164,9 +164,9 @@ universe:
     majors_l1: 2
     derivatives_movers: 2
     dex_memecoin_candidates: 0
-    liquid_spot_candidates: 12
+    liquid_spot_candidates: 20
   deep_bucket_minimums:
-    liquid_spot_candidates: 12
+    liquid_spot_candidates: 20
   weights:
     liquidity: 0.20
     volume: 0.30
