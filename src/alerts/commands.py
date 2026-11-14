@@ -214,6 +214,10 @@ class TelegramCommandService:
                 lines.append(f"{name}: plans={item['plans']} no_trade={item['no_trade']} pending={item['pending']} filled={item['filled']} open={item['open']} closed={item['closed']} expired={item['expired']} rejected={item['rejected']} unknown_marks={item['unknown_marks']}")
                 for quote, values in sorted(item["by_quote"].items()):
                     lines.append(f"  {quote}: closed n={values['closed']}, realized net={values['realized_net']:.4f}, open mark net={values['marked_unrealized_net']:.4f}, wins={values['wins']}, turnover={values['turnover_notional']:.2f}, fees={values['fees']:.4f}, sampled max drawdown={values['max_drawdown']:.4f}, marks={values['mark_count']}, max quote gap={values['max_quote_gap_seconds']:.0f}s")
+            paired = strategy.paired_comparison()
+            for quote, values in sorted(paired["by_quote"].items()):
+                lines.append(f"Пары {quote}: решений={values['paired_decisions']}, неполных пар={values['unpaired_decisions']}, одинаковых входов={values['both_proposed']}, оба закрыты={values['both_closed']}, ещё не завершены={values['both_unresolved']}, только baseline={values['baseline_only']}, только disciplined={values['disciplined_only']}, несовпадение политики={values['policy_mismatch']}, версий правил={len(values['policy_ids'])}")
+                lines.append(f"  Разница net на закрытых парах disciplined−baseline={values['paired_disciplined_minus_baseline_net']:.4f} {quote}; односторонние закрытия показаны отдельно: baseline={values['baseline_only_closed']}, disciplined={values['disciplined_only_closed']}")
             lines.append("Издержки моделируются; mark и MFE/MAE выборочные, не биржевое исполнение. Нет причин считать эти числа прогнозом.")
             return ["\n".join(lines)[:3900]]
         if command in {"/analysis_status", "/analysis_performance"}:

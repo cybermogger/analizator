@@ -199,6 +199,31 @@ def test_shadow_report_exposes_quote_sampling_gap(tmp_path):
     db.close()
 
 
+def test_paired_comparison_keeps_abstentions_out_of_trade_delta(tmp_path):
+    db = SQLiteStorage(tmp_path / "paired.db")
+    now = 1_800_000_000_000
+    strategy = StrategyShadow(db)
+    strategy.evaluate(valid_card(now))
+    strategy.advance(later_quote(now + 1000), now + 1000)
+    strategy.advance(later_quote(now + 2000, bid=102, ask=102.1), now + 2000)
+    second = valid_card(now + 3_600_000)
+    second["candles"]["15m"]["trend"] = "DOWN"
+    decisions = strategy.evaluate(second)
+    assert [plan.status for plan in decisions] == ["PROPOSED", "NO_TRADE"]
+    strategy.advance(later_quote(now + 3_601_000), now + 3_601_000)
+    strategy.advance(later_quote(now + 3_602_000, bid=102, ask=102.1), now + 3_602_000)
+    metrics = strategy.paired_comparison()["by_quote"]["USDT"]
+    assert metrics["paired_decisions"] == 2
+    assert metrics["both_proposed"] == metrics["both_closed"] == 1
+    assert metrics["paired_disciplined_minus_baseline_net"] == 0
+    assert metrics["baseline_only"] == metrics["baseline_only_closed"] == 1
+    assert metrics["disciplined_only"] == 0
+    assert metrics["baseline_only_closed_net"] > 0
+    assert len(metrics["policy_ids"]) == 1
+    assert strategy.paired_comparison()["status"] == "NOT_EVALUABLE"
+    db.close()
+
+
 def test_read_only_commands_show_exact_plans_and_separate_quote_accounts(tmp_path):
     db = SQLiteStorage(tmp_path / "commands.db")
     strategy = StrategyShadow(db)
@@ -209,6 +234,7 @@ def test_read_only_commands_show_exact_plans_and_separate_quote_accounts(tmp_pat
     report = asyncio.run(command.handle("/strategy_performance"))[0]
     assert "baseline" in plan and "disciplined" in plan and "USDT" in plan
     assert "NOT_EVALUABLE" in report and "USDT и USD не суммируются" in report
+    assert "Пары USDT" in report and "версий правил=1" in report
     assert "вероятность" in plan and "Виртуальный" in report
     db.close()
 

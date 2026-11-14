@@ -435,6 +435,74 @@ class StrategyShadow:
                     metrics["max_drawdown"] = max(metrics["max_drawdown"], peak-cumulative)
         return result
 
+    def paired_comparison(self) -> dict[str, Any]:
+        """Compare only decisions made for the same instrument and observation.
+
+        A paired PnL delta is reported only after both virtual positions close.
+        One-sided decisions remain separate so abstention is not mistaken for a
+        zero-return trade. This is descriptive forward evidence, not an edge test.
+        """
+        cohorts: dict[tuple[str, int, str], dict[str, dict[str, Any]]] = {}
+        for row in self.storage.query("SELECT payload_json FROM strategy_shadow_plans"):
+            plan = json.loads(row["payload_json"])
+            key = (plan["instrument_id"], int(plan["observed_at_ms"]), plan.get("quote", ""))
+            cohorts.setdefault(key, {})[plan["variant"]] = plan
+        result: dict[str, Any] = {"status": "NOT_EVALUABLE", "by_quote": {}}
+        for (_, _, quote), pair in cohorts.items():
+            metrics = result["by_quote"].setdefault(quote or "UNKNOWN_QUOTE", {
+                "paired_decisions": 0, "unpaired_decisions": 0,
+                "policy_mismatch": 0, "both_no_trade": 0,
+                "both_proposed": 0, "both_closed": 0, "both_unresolved": 0,
+                "baseline_only": 0, "baseline_only_closed": 0,
+                "disciplined_only": 0, "disciplined_only_closed": 0,
+                "policy_ids": [],
+                "paired_disciplined_minus_baseline_net": 0.0,
+                "baseline_only_closed_net": 0.0,
+                "disciplined_only_closed_net": 0.0})
+            if set(pair) != {"baseline", "disciplined"}:
+                metrics["unpaired_decisions"] += 1
+                continue
+            metrics["paired_decisions"] += 1
+            baseline, disciplined = pair["baseline"], pair["disciplined"]
+            if baseline.get("policy_id") != disciplined.get("policy_id"):
+                metrics["policy_mismatch"] += 1
+                continue
+            policy_id = baseline.get("policy_id", "")
+            if policy_id and policy_id not in metrics["policy_ids"]:
+                metrics["policy_ids"].append(policy_id)
+            baseline_trade = baseline["status"] == "PROPOSED"
+            disciplined_trade = disciplined["status"] == "PROPOSED"
+            if not baseline_trade and not disciplined_trade:
+                metrics["both_no_trade"] += 1
+                continue
+
+            def closed_net(plan: dict[str, Any]) -> float | None:
+                close = next((event for event in reversed(self._events(plan["plan_id"]))
+                    if event["type"] == "CLOSED"), None)
+                return float(close["net_pnl"]) if close else None
+
+            if baseline_trade and disciplined_trade:
+                metrics["both_proposed"] += 1
+                baseline_net, disciplined_net = closed_net(baseline), closed_net(disciplined)
+                if baseline_net is None or disciplined_net is None:
+                    metrics["both_unresolved"] += 1
+                else:
+                    metrics["both_closed"] += 1
+                    metrics["paired_disciplined_minus_baseline_net"] += disciplined_net - baseline_net
+            elif baseline_trade:
+                metrics["baseline_only"] += 1
+                net = closed_net(baseline)
+                if net is not None:
+                    metrics["baseline_only_closed"] += 1
+                    metrics["baseline_only_closed_net"] += net
+            else:
+                metrics["disciplined_only"] += 1
+                net = closed_net(disciplined)
+                if net is not None:
+                    metrics["disciplined_only_closed"] += 1
+                    metrics["disciplined_only_closed_net"] += net
+        return result
+
     def latest_plans(self, instrument_id: str) -> list[dict[str, Any]]:
         rows = self.storage.query("SELECT payload_json FROM strategy_shadow_plans WHERE instrument_id=? ORDER BY observed_at_ms DESC LIMIT 2", (instrument_id,))
         return [{"plan": json.loads(row["payload_json"]), "events": self._events(json.loads(row["payload_json"])["plan_id"])} for row in rows]
