@@ -79,7 +79,8 @@ class MultiAssetAnalysisService:
         self._instrument_errors: dict[str, str] = {}
         self._cards: dict[str, dict[str, Any]] = {}
         self._cursor = 0
-        self._shadow_cursor = 0
+        self._shadow_open_cursor = 0
+        self._shadow_pending_cursor = 0
         self._stop = asyncio.Event()
         self._cycles = 0
         self._requests = 0
@@ -789,11 +790,31 @@ class MultiAssetAnalysisService:
             strategy.expire_pending(self._now_ms())
             monitor_budget = min(self.shadow_monitor_requests_per_cycle,
                 max(0, self.max_requests_per_cycle - self._requests - len(rotated) * len(self.intervals)))
-            monitor_ids = strategy.monitored_instrument_ids(self._now_ms())
-            if monitor_ids:
-                start_monitor = self._shadow_cursor % len(monitor_ids)
-                selected = (monitor_ids[start_monitor:] + monitor_ids[:start_monitor])[:monitor_budget]
-                self._shadow_cursor = (start_monitor + len(selected)) % len(monitor_ids)
+            open_ids = strategy.monitored_instrument_ids(self._now_ms(), "OPEN")
+            pending_ids = strategy.monitored_instrument_ids(self._now_ms(), "PENDING")
+            selected: list[str] = []
+
+            def take_monitors(ids: list[str], cursor_name: str, limit: int) -> None:
+                if not ids or limit <= 0 or len(selected) >= limit:
+                    return
+                start = getattr(self, cursor_name) % len(ids)
+                scanned = 0
+                for instrument_id in ids[start:] + ids[:start]:
+                    scanned += 1
+                    if instrument_id not in selected:
+                        selected.append(instrument_id)
+                    if len(selected) >= limit:
+                        break
+                setattr(self, cursor_name, (start + scanned) % len(ids))
+
+            # A pending entry can expire without a quote; an open position
+            # cannot. Reserve an open slot first, and one pending slot when
+            # both groups exist and the request budget permits it.
+            open_quota = monitor_budget - 1 if open_ids and pending_ids and monitor_budget > 1 else monitor_budget
+            take_monitors(open_ids, "_shadow_open_cursor", open_quota)
+            take_monitors(pending_ids, "_shadow_pending_cursor", monitor_budget)
+            take_monitors(open_ids, "_shadow_open_cursor", monitor_budget)
+            if selected:
                 for instrument_id in selected:
                     now_monitor = self._now_ms()
                     try:

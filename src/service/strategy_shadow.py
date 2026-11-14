@@ -224,10 +224,14 @@ class StrategyShadow:
         return [json.loads(r["payload_json"]) for r in self.storage.query(
             "SELECT payload_json FROM strategy_shadow_events WHERE plan_id=? ORDER BY event_at_ms,event_id", (plan_id,))]
 
-    def monitored_instrument_ids(self, now_ms: int) -> list[str]:
+    def monitored_instrument_ids(self, now_ms: int, state: str | None = None) -> list[str]:
         """Return instruments needing an entry, expiry, or exit observation."""
+        if state not in (None, "PENDING", "OPEN"):
+            raise ValueError("unsupported shadow state")
+        states = (state,) if state else ("PENDING", "OPEN")
         return [row["instrument_id"] for row in self.storage.query(
-            "SELECT DISTINCT instrument_id FROM strategy_shadow_state WHERE state IN ('PENDING','OPEN') ORDER BY instrument_id")]
+            f"SELECT DISTINCT instrument_id FROM strategy_shadow_state WHERE state IN ({','.join('?' for _ in states)}) ORDER BY instrument_id",
+            states)]
 
     def expire_pending(self, now_ms: int) -> int:
         rows = self.storage.query("""SELECT p.payload_json FROM strategy_shadow_plans p
@@ -382,6 +386,7 @@ class StrategyShadow:
             metrics = account["by_quote"].setdefault(quote, {"closed": 0, "open": 0,
                 "realized_net": 0.0, "marked_unrealized_net": 0.0, "wins": 0,
                 "turnover_notional": 0.0, "fees": 0.0, "max_drawdown": 0.0,
+                "mark_count": 0, "max_quote_gap_seconds": 0.0,
                 "holding_seconds_total": 0.0, "mfe_total": 0.0, "mae_total": 0.0,
                 "policy_ids": [], "_closed_pnl": []})
             if p.get("policy_id") and p["policy_id"] not in metrics["policy_ids"]:
@@ -390,6 +395,15 @@ class StrategyShadow:
             metrics["turnover_notional"] += entry_notional
             metrics["fees"] += float(fill["fees"])
             marks = [float(e["net_pnl_if_closed"]) for e in ev if e["type"] == "MARK"]
+            mark_times = [int(e["at"]) for e in ev if e["type"] == "MARK"]
+            metrics["mark_count"] += len(mark_times)
+            observed_times = [int(fill["at"]), *mark_times]
+            if close:
+                observed_times.append(int(close["at"]))
+            else:
+                observed_times.append(max(int(now_ms), observed_times[-1]))
+            metrics["max_quote_gap_seconds"] = max(metrics["max_quote_gap_seconds"],
+                max((later - earlier) / 1000 for earlier, later in zip(observed_times, observed_times[1:])))
             if close:
                 account["closed"] += 1
                 metrics["closed"] += 1

@@ -213,7 +213,7 @@ class TelegramCommandService:
             for name, item in report.items():
                 lines.append(f"{name}: plans={item['plans']} no_trade={item['no_trade']} pending={item['pending']} filled={item['filled']} open={item['open']} closed={item['closed']} expired={item['expired']} rejected={item['rejected']} unknown_marks={item['unknown_marks']}")
                 for quote, values in sorted(item["by_quote"].items()):
-                    lines.append(f"  {quote}: closed n={values['closed']}, realized net={values['realized_net']:.4f}, open mark net={values['marked_unrealized_net']:.4f}, wins={values['wins']}, turnover={values['turnover_notional']:.2f}, fees={values['fees']:.4f}, sampled max drawdown={values['max_drawdown']:.4f}")
+                    lines.append(f"  {quote}: closed n={values['closed']}, realized net={values['realized_net']:.4f}, open mark net={values['marked_unrealized_net']:.4f}, wins={values['wins']}, turnover={values['turnover_notional']:.2f}, fees={values['fees']:.4f}, sampled max drawdown={values['max_drawdown']:.4f}, marks={values['mark_count']}, max quote gap={values['max_quote_gap_seconds']:.0f}s")
             lines.append("Издержки моделируются; mark и MFE/MAE выборочные, не биржевое исполнение. Нет причин считать эти числа прогнозом.")
             return ["\n".join(lines)[:3900]]
         if command in {"/analysis_status", "/analysis_performance"}:

@@ -141,6 +141,64 @@ def test_normal_refresh_monitors_removed_deep_instrument(tmp_path):
     db.close()
 
 
+def test_normal_refresh_reserves_open_and_pending_monitor_slots(tmp_path):
+    db = SQLiteStorage(tmp_path / "monitor_fairness.db")
+    now = 1_800_000_000_000
+    strategy = StrategyShadow(db)
+    open_ids = [f"binance:spot:OPEN{i}-USDT" for i in range(3)]
+    pending_ids = [f"binance:spot:PENDING{i}-USDT" for i in range(3)]
+    for iid in open_ids + pending_ids:
+        strategy.evaluate(valid_card(now, iid))
+    for iid in open_ids:
+        quote = later_quote(now + 1000)
+        quote["instrument_id"] = iid
+        strategy.advance(quote, now + 1000)
+
+    fetched = []
+    class Provider:
+        async def fetch_bbo(self, instrument):
+            fetched.append(instrument.instrument_id)
+            meta = EventMetadata("binance", "binance-spot", instrument.instrument_id,
+                now + 2000, now + 2000, "synthetic")
+            return NormalizedBBO(meta, 100, 100.1, 1, 1)
+    class Registry:
+        def get(self, iid):
+            symbol = iid.split(":")[-1].split("-")[0]
+            return Instrument(iid, f"unresolved:binance:{symbol}:USDT", "binance",
+                "binance-spot", MarketType.SPOT, symbol, "USDT", symbol + "USDT", 2, 3)
+    class Providers:
+        def get(self, _provider): return Provider()
+    class MarketData:
+        membership = ()
+        instruments = Registry()
+        providers = Providers()
+        config = {"providers": {"binance": {"request_timeout_seconds": 1}}}
+        async def _provider_request(self, _provider, operation): return await operation()
+    analysis = MultiAssetAnalysisService(MarketData(), {"maximum_requests_per_cycle": 4,
+        "shadow_monitor_requests_per_cycle": 2})
+    analysis.strategy_shadow = strategy
+    analysis._now_ms = lambda: now + 2000
+    asyncio.run(analysis.refresh_once())
+    assert len(fetched) == 2
+    assert len(set(fetched) & set(open_ids)) == 1
+    assert len(set(fetched) & set(pending_ids)) == 1
+    assert analysis._requests == 2
+    db.close()
+
+
+def test_shadow_report_exposes_quote_sampling_gap(tmp_path):
+    db = SQLiteStorage(tmp_path / "sampling.db")
+    now = 1_800_000_000_000
+    strategy = StrategyShadow(db)
+    strategy.evaluate(valid_card(now))
+    strategy.advance(later_quote(now + 1000), now + 1000)
+    report = strategy.summary(now + 90_000)
+    assert report["baseline"]["unknown_marks"] == 1
+    assert report["baseline"]["by_quote"]["USDT"]["mark_count"] == 0
+    assert report["baseline"]["by_quote"]["USDT"]["max_quote_gap_seconds"] == 89
+    db.close()
+
+
 def test_read_only_commands_show_exact_plans_and_separate_quote_accounts(tmp_path):
     db = SQLiteStorage(tmp_path / "commands.db")
     strategy = StrategyShadow(db)
