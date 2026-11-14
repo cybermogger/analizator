@@ -1,0 +1,16 @@
+{
+  "products": [
+    {
+      "product_id": "PONKE-USD",
+      "base_currency_id": "PONKE",
+      "quote_currency_id": "USD",
+      "product_type": "SPOT",
+      "status": "online",
+      "price": "0.25",
+      "volume_24h": "200000",
+      "base_increment": "0.001",
+      "quote_increment": "0.01"
+    }
+  ],
+  "pagination": {"has_next": false, "next_cursor": ""}
+}

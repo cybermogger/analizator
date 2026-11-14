@@ -1,0 +1,31 @@
+# Phase 08 — Disciplined multi-asset shadow experiment
+
+Status: IMPLEMENTED AS A SPOT-ONLY VIRTUAL EXPERIMENT. Phase7 A/B/C remains accepted. Human request on 2026-11-05: continue analyzer implementation, borrow useful mechanisms from profitable AI contestants. No profitability claim or real trading is authorized by this implementation.
+
+## Required scope
+
+- Versioned exact-venue-instrument plans derived from causal closed-candle Phase7 analysis: LONG/SHORT/NO_TRADE with reasons, entry policy/TTL, immutable stop/target/time exit, conservative risk sizing. Heuristic plans must not manufacture calibrated probabilities or bypass Phase4/5 gates.
+- Separate comparable baseline (1h trend) and disciplined (15m/1h/4h agreement plus cooldown/new-closed-bar rearm) virtual accounts, common universe/risk/cost rules and frozen config IDs.
+- Causal later-quote entries and bid/ask-aware exits; no same-observation fills; idempotent state transitions/restart; frozen assumptions; gap/timeout handling and per-instrument failure isolation. Continue bounded monitoring of open instruments after deep-universe removal.
+- Fees/slippage/spread recorded once; unsupported quotes/types explicitly rejected. Perpetual funding incompleteness must remain visible and must prevent fully-net profitability claims. No fictional USD conversions, asset ticker merges or contract multiplier changes.
+- Bounded integration with normal analysis worker, Russian /trade_plan exact-id and /strategy_performance plus discoverability from existing commands. No daemon or Telegram delivery during validation.
+- Explicit sample/NO_TRADE/open/expired/unknown counts, cost completeness, realized/unrealized results, sampled drawdown/turnover/holding/MFE/MAE; NOT_EVALUABLE until suitable real forward evidence. Synthetic tests do not prove profitability.
+- Offline regression tests using synthetic temporary databases; dotenv and pytest cache disabled before imports. Each subprocess <=55s. Unit/integration batches and independent final review. Preserve all dirty Mini App/A/B/C changes; no commit.
+
+## Source and evidence boundary
+
+Organizer's archived primary technical post: https://web.archive.org/web/20251105123629/https://nof1.ai/blog/TechPost1%5C . It describes predeclared exits and fixed open-position parameters and observes overtrading costs and unreliable self-reported confidence. Full system prompt and reproducible winner strategy are unavailable. Our numeric defaults and alignment/cooldown rules are research hypotheses, not copied profitable parameters.
+
+Independent original reconstructions (not exchange audits): https://binam.io/en/blog/can-an-ai-agent-pass-a-prop-firm-challenge-we-replayed-six-ai-models-against and https://tradingagentstack.com/alpha-arena-results/ . Short contest, drawdowns, outlier gains and inconsistent end marks limit conclusions. Large leverage is not transferred.
+
+## Implementation and validation
+
+- `src/service/strategy_shadow.py` writes immutable point-in-time plans and events. A mutable indexed state projection is rebuilt from the journal after restart. One closed 1h bar produces at most one plan per variant and exact venue instrument. Baseline uses the 1h trend; disciplined requires 15m/1h/4h agreement and a frozen cooldown after terminal state. Both use the same spot-long entry and risk/cost settings; DOWN, disagreement, stale/missing source, unsupported quote/type, and absent volatility result in `NO_TRADE` with reasons. The score is only a heuristic setup label.
+- Proposed plans freeze reference BBO provenance, 1h bar anchor, quote currency, stop, target, TTL, holding duration, fee/slippage, spread/freshness gates, risk caps and policy hash. A later exact-identity fresh ask may create a virtual fill. A still later bid may mark/close it on stop, target, or time. Entry and exit fees use full position notional and the original frozen assumptions after restart. The portfolio gate checks cash and stop-plus-cost risk separately for each variant and quote currency.
+- `MultiAssetAnalysisService.refresh_once` services due Phase7 outcomes first, then reserves up to two quote requests for pending/open shadow plans after protecting the selected markets' candle budget. Pending entries expire without a quote. Open instruments remain monitored after deep-watchlist removal while exact registry identity remains available. Missing valid later quotes leave positions open with unknown current outcome; no fabricated fill/exit is recorded.
+- `/trade_plan <exact-instrument-id>` shows the latest pair of persisted plans and lifecycle. `/strategy_performance` shows counts and separate USD/USDT virtual results, costs, turnover and sampled drawdown. The report always says `NOT_EVALUABLE`; neither the rule score nor virtual PnL is a win probability.
+- Offline synthetic temporary SQLite tests cover frozen full-notional fees after config change/restart, backward exchange-time rejection, `NO_TRADE` non-execution, virtual portfolio risk, same-bar rearm/cooldown, removed-deep normal worker monitoring, and read-only commands. A normal BONK spot analysis card also produces both virtual plans. At final acceptance, the complete unit suite passed in three bounded batches (71 + 107 + 61 = 239), and integration passed 6. Dotenv and pytest cache were disabled; async/timeout pytest plugins were explicitly loaded. No daemon, live trade, Telegram delivery, or existing runtime DB was used.
+
+## Limits and next evidence gate
+
+Only long spot setups are eligible. Perpetual shorts are `NO_TRADE` because funding, margin, liquidation and contract-unit accounting are not complete enough for net PnL. USD and USDT have independent virtual balances and reports; no exchange conversion or combined account return is inferred. Top-of-book quotes and fixed slippage are a simulation, not proof of executable depth or fills. Marks, MFE/MAE and drawdown sample the fetched quotes and may miss intervening stop/target moves. A missing or stale quote leaves current PnL unknown. The 1h anchor, 15m/1h/4h rule, 60-second TTL, 900-second cooldown, 1-hour hold, 0.1% per-plan risk, 1% aggregate stop risk, 250 quote-unit max notional, 4 bps fee and 2 bps slippage are unvalidated design choices. Forward out-of-sample comparison with sufficient counts, coverage and costs is needed before any profitability claim or promotion.

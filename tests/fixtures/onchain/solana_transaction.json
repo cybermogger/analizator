@@ -1,0 +1,35 @@
+{
+  "signature": "5VERiFiedSo1anaTransactionSignature111111111111111111111111111111111111111111111",
+  "slot": 312345678,
+  "blockhash": "9BlockHash11111111111111111111111111111111111111",
+  "previous_blockhash": "8PreviousBlockHash111111111111111111111111111111",
+  "block_time_ms": 1737165651000,
+  "transaction": {
+    "slot": 312345678,
+    "blockTime": 1737165651,
+    "meta": {"err": null, "transactionIndex": 3},
+    "transaction": {
+      "signatures": ["5VERiFiedSo1anaTransactionSignature111111111111111111111111111111111111111111111"],
+      "message": {
+        "accountKeys": [
+          {"pubkey": "Deployer1111111111111111111111111111111111", "signer": true, "writable": true}
+        ],
+        "instructions": [
+          {
+            "program": "spl-token",
+            "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            "parsed": {
+              "type": "initializeMint2",
+              "info": {
+                "mint": "6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN",
+                "decimals": 6,
+                "mintAuthority": "MintAuthority11111111111111111111111111111",
+                "freezeAuthority": null
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

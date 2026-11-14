@@ -1,0 +1,39 @@
+services:
+  analyzer:
+    build: .
+    restart: unless-stopped
+    init: true
+    user: "${ANALYZER_UID:-1000}:${ANALYZER_GID:-1000}"
+    stop_signal: SIGTERM
+    stop_grace_period: 40s
+    env_file:
+      - .env
+    environment:
+      ANALYZER_DB_PATH: /data/analyzer.db
+      ANALYZER_RAW_PATH: /data/raw
+      ANALYZER_MODELS_PATH: /models
+      ANALYZER_LOGS_PATH: /logs
+      ANALYZER_HEARTBEAT_PATH: /data/heartbeat.json
+      ANALYZER_MINI_APP_HOST: 0.0.0.0
+      ANALYZER_MINI_APP_PORT: "8080"
+      WATCHDOG_STALE_SECONDS: "180"
+      WATCHDOG_STARTUP_GRACE_SECONDS: "180"
+      WATCHDOG_CHECK_SECONDS: "5"
+      WATCHDOG_TERMINATE_SECONDS: "25"
+    volumes:
+      - ./data:/data
+      - ./models:/models
+      - ./logs:/logs
+    ports:
+      - "127.0.0.1:${MINI_APP_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "python", "status.py", "--healthcheck", "--max-age-seconds", "180"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 180s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "5"

@@ -1,0 +1,19 @@
+{
+  "receipt": {
+    "transactionHash": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "transactionIndex": "0x2",
+    "blockHash": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "blockNumber": "0x1234",
+    "from": "0x1111111111111111111111111111111111111111",
+    "to": null,
+    "contractAddress": "0x2222222222222222222222222222222222222222",
+    "status": "0x1",
+    "logs": []
+  },
+  "block": {
+    "hash": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "parentHash": "0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "number": "0x1234",
+    "timestamp": "0x678b0640"
+  }
+}

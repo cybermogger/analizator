@@ -1,0 +1,96 @@
+{
+  "ablations": {
+    "without_derivatives": {"net_expectancy_ci95": null, "precision_ci95": null, "reason": "no reproducible point-in-time Phase 4 dataset snapshot is available", "sample_count": 0, "status": "NOT_EVALUABLE", "trade_count": 0},
+    "without_market_truth": {"net_expectancy_ci95": null, "precision_ci95": null, "reason": "no reproducible point-in-time Phase 4 dataset snapshot is available", "sample_count": 0, "status": "NOT_EVALUABLE", "trade_count": 0},
+    "without_news": {"net_expectancy_ci95": null, "precision_ci95": null, "reason": "no reproducible point-in-time Phase 4 dataset snapshot is available", "sample_count": 0, "status": "NOT_EVALUABLE", "trade_count": 0},
+    "without_onchain": {"net_expectancy_ci95": null, "precision_ci95": null, "reason": "no reproducible point-in-time Phase 4 dataset snapshot is available", "sample_count": 0, "status": "NOT_EVALUABLE", "trade_count": 0},
+    "without_orderbook": {"net_expectancy_ci95": null, "precision_ci95": null, "reason": "no reproducible point-in-time Phase 4 dataset snapshot is available", "sample_count": 0, "status": "NOT_EVALUABLE", "trade_count": 0},
+    "without_social": {"net_expectancy_ci95": null, "precision_ci95": null, "reason": "no reproducible point-in-time Phase 4 dataset snapshot is available", "sample_count": 0, "status": "NOT_EVALUABLE", "trade_count": 0},
+    "without_trade_flow": {"net_expectancy_ci95": null, "precision_ci95": null, "reason": "no reproducible point-in-time Phase 4 dataset snapshot is available", "sample_count": 0, "status": "NOT_EVALUABLE", "trade_count": 0}
+  },
+  "baselines": {
+    "btc_beta": {
+      "net_expectancy_ci95": null,
+      "precision_ci95": null,
+      "reason": "no reproducible point-in-time Phase 4 dataset snapshot is available",
+      "sample_count": 0,
+      "status": "NOT_EVALUABLE",
+      "trade_count": 0
+    },
+    "current_production": {
+      "net_expectancy_ci95": null,
+      "precision_ci95": null,
+      "reason": "no reproducible point-in-time Phase 4 dataset snapshot is available",
+      "sample_count": 0,
+      "status": "NOT_EVALUABLE",
+      "trade_count": 0
+    },
+    "mean_reversion": {
+      "net_expectancy_ci95": null,
+      "precision_ci95": null,
+      "reason": "no reproducible point-in-time Phase 4 dataset snapshot is available",
+      "sample_count": 0,
+      "status": "NOT_EVALUABLE",
+      "trade_count": 0
+    },
+    "momentum": {
+      "net_expectancy_ci95": null,
+      "precision_ci95": null,
+      "reason": "no reproducible point-in-time Phase 4 dataset snapshot is available",
+      "sample_count": 0,
+      "status": "NOT_EVALUABLE",
+      "trade_count": 0
+    },
+    "no_trade": {
+      "net_expectancy_ci95": null,
+      "precision_ci95": null,
+      "reason": "no reproducible point-in-time Phase 4 dataset snapshot is available",
+      "sample_count": 0,
+      "status": "NOT_EVALUABLE",
+      "trade_count": 0
+    }
+  },
+  "challenger": {
+    "net_expectancy_ci95": null,
+    "precision_ci95": null,
+    "reason": "no reproducible point-in-time Phase 4 dataset snapshot is available",
+    "sample_count": 0,
+    "status": "NOT_EVALUABLE",
+    "trade_count": 0
+  },
+  "challenger_name": "segmented_two_stage_ranker",
+  "dataset_snapshot_id": null,
+  "negative_results_preserved": true,
+  "phase": 4,
+  "protocol_version": "phase4-3.0",
+  "target": "tp_before_stop",
+  "horizons": ["5m", "15m", "1h", "4h", "24h"],
+  "predictive_targets": ["tp_before_stop", "execution_adjusted_return", "mae", "mfe", "realized_volatility", "exit_feasibility"],
+  "ranking": {
+    "primary_key": "predicted_execution_adjusted_return",
+    "tie_breakers": ["calibrated_tp_probability", "exit_feasibility_probability", "predicted_mfe", "decision_liquidity_usd"],
+    "gates": "configured_per_experiment"
+  },
+  "production_weight_changes": {},
+  "promotion": {
+    "challenger": "two_stage_opportunity_ranker",
+    "incumbent": "existing SOL/HYPE production ensemble",
+    "promote": false,
+    "reasons": [
+      "no reproducible point-in-time Phase 4 dataset snapshot is available"
+    ],
+    "status": "NOT_EVALUABLE"
+  },
+  "real_execution_enabled": false,
+  "real_performance_claim": false,
+  "rejected_variants": [
+    {"name": "without_news", "reason": "no reproducible point-in-time Phase 4 dataset snapshot is available", "status": "NOT_EVALUABLE"},
+    {"name": "without_social", "reason": "no reproducible point-in-time Phase 4 dataset snapshot is available", "status": "NOT_EVALUABLE"},
+    {"name": "without_onchain", "reason": "no reproducible point-in-time Phase 4 dataset snapshot is available", "status": "NOT_EVALUABLE"},
+    {"name": "without_orderbook", "reason": "no reproducible point-in-time Phase 4 dataset snapshot is available", "status": "NOT_EVALUABLE"},
+    {"name": "without_trade_flow", "reason": "no reproducible point-in-time Phase 4 dataset snapshot is available", "status": "NOT_EVALUABLE"},
+    {"name": "without_derivatives", "reason": "no reproducible point-in-time Phase 4 dataset snapshot is available", "status": "NOT_EVALUABLE"},
+    {"name": "without_market_truth", "reason": "no reproducible point-in-time Phase 4 dataset snapshot is available", "status": "NOT_EVALUABLE"}
+  ],
+  "status": "NOT_EVALUABLE"
+}

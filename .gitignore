@@ -1,0 +1,59 @@
+# Secrets and local environments
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+env/
+
+# Python and test caches
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Runtime state and logs
+data/*
+!data/.gitkeep
+logs/*
+!logs/.gitkeep
+*.log
+*.log.*
+*.pid
+*.lock
+*.tmp
+
+# Databases and sidecars, wherever a local override places them
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+
+# Raw market-data artifacts
+*.parquet
+*.arrow
+*.feather
+
+# Generated model binaries; keep human-readable metrics/audits trackable
+models/*.joblib
+models/challengers/
+models/champions/
+
+# Editor and OS metadata
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

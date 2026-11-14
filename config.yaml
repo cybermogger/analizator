@@ -1,0 +1,503 @@
+service:
+  analysis_interval_seconds: 45
+  cycle_timeout_seconds: 60
+  request_timeout_seconds: 8
+  max_retries: 4
+  history_candles: 350
+  minimum_candles: 220
+  health_interval_hours: 4
+  log_level: INFO
+  log_max_bytes: 10000000
+  log_backup_count: 5
+
+mini_app:
+  enabled: true
+  host: 127.0.0.1
+  port: 8080
+  public_url: null
+  allowed_user_ids: []
+  init_data_max_age_seconds: 300
+
+market:
+  assets: [SOL, HYPE]
+  context_asset: BTC
+  timeframes: [1m, 5m, 15m, 30m, 1h, 4h]
+  timeframe_weights:
+    1m: 0.05
+    5m: 0.15
+    15m: 0.25
+    30m: 0.15
+    1h: 0.25
+    4h: 0.15
+
+providers:
+  hyperliquid:
+    kind: hyperliquid
+    enabled: true
+    rest_url: https://api.hyperliquid.xyz/info
+    websocket_url: wss://api.hyperliquid.xyz/ws
+    request_timeout_seconds: 8
+    max_retries: 4
+    max_subscriptions: 120
+    max_concurrent_requests: 4
+    minimum_request_interval_ms: 100
+    stale_after_seconds: 30
+  binance:
+    kind: binance
+    enabled: true
+    spot_rest_url: https://data-api.binance.vision
+    futures_rest_url: https://fapi.binance.com
+    spot_websocket_url: wss://stream.binance.com:9443/ws
+    futures_websocket_url: wss://fstream.binance.com/ws
+    request_timeout_seconds: 8
+    max_subscriptions: 1024
+    max_concurrent_requests: 4
+    minimum_request_interval_ms: 100
+    stale_after_seconds: 30
+  coinbase:
+    kind: coinbase
+    enabled: true
+    rest_url: https://api.coinbase.com
+    websocket_url: wss://advanced-trade-ws.coinbase.com
+    request_timeout_seconds: 8
+    max_subscriptions: 300
+    max_concurrent_requests: 4
+    minimum_request_interval_ms: 100
+    stale_after_seconds: 30
+    catalog_page_size: 250
+    catalog_max_pages: 20
+    catalog_page_delay_seconds: 0.15
+    bbo_enrichment_limit: 10
+  kraken:
+    kind: kraken
+    enabled: true
+    rest_url: https://api.kraken.com
+    websocket_url: wss://ws.kraken.com/v2
+    request_timeout_seconds: 8
+    max_subscriptions: 200
+    max_concurrent_requests: 4
+    minimum_request_interval_ms: 100
+    stale_after_seconds: 30
+
+instruments:
+  - {instrument_id: hyperliquid:perpetual:SOL-USDC, canonical_asset_id: native:solana, provider: hyperliquid, venue: hyperliquid, market_type: perpetual, base: SOL, quote: USDC, venue_symbol: SOL, price_decimals: 4, size_decimals: 2}
+  - {instrument_id: hyperliquid:perpetual:HYPE-USDC, canonical_asset_id: native:hyperliquid, provider: hyperliquid, venue: hyperliquid, market_type: perpetual, base: HYPE, quote: USDC, venue_symbol: HYPE, price_decimals: 4, size_decimals: 2}
+  - {instrument_id: hyperliquid:perpetual:BTC-USDC, canonical_asset_id: native:bitcoin, provider: hyperliquid, venue: hyperliquid, market_type: perpetual, base: BTC, quote: USDC, venue_symbol: BTC, price_decimals: 1, size_decimals: 5}
+  - {instrument_id: binance:spot:SOL-USDT, canonical_asset_id: native:solana, provider: binance, venue: binance-spot, market_type: spot, base: SOL, quote: USDT, venue_symbol: SOLUSDT, price_decimals: 4, size_decimals: 2}
+  - {instrument_id: binance:perpetual:SOL-USDT, canonical_asset_id: native:solana, provider: binance, venue: binance-usdm, market_type: perpetual, base: SOL, quote: USDT, venue_symbol: SOLUSDT, price_decimals: 4, size_decimals: 2}
+  - {instrument_id: binance:spot:BTC-USDT, canonical_asset_id: native:bitcoin, provider: binance, venue: binance-spot, market_type: spot, base: BTC, quote: USDT, venue_symbol: BTCUSDT, price_decimals: 2, size_decimals: 5}
+  - {instrument_id: binance:perpetual:BTC-USDT, canonical_asset_id: native:bitcoin, provider: binance, venue: binance-usdm, market_type: perpetual, base: BTC, quote: USDT, venue_symbol: BTCUSDT, price_decimals: 2, size_decimals: 5}
+  - {instrument_id: coinbase:spot:SOL-USD, canonical_asset_id: native:solana, provider: coinbase, venue: coinbase-advanced, market_type: spot, base: SOL, quote: USD, venue_symbol: SOL-USD, price_decimals: 4, size_decimals: 3}
+  - {instrument_id: coinbase:spot:BTC-USD, canonical_asset_id: native:bitcoin, provider: coinbase, venue: coinbase-advanced, market_type: spot, base: BTC, quote: USD, venue_symbol: BTC-USD, price_decimals: 2, size_decimals: 8}
+  - {instrument_id: kraken:spot:SOL-USD, canonical_asset_id: native:solana, provider: kraken, venue: kraken-spot, market_type: spot, base: SOL, quote: USD, venue_symbol: SOL/USD, price_decimals: 4, size_decimals: 3}
+  - {instrument_id: kraken:spot:BTC-USD, canonical_asset_id: native:bitcoin, provider: kraken, venue: kraken-spot, market_type: spot, base: XBT, quote: USD, venue_symbol: XBT/USD, price_decimals: 2, size_decimals: 8, metadata: {kraken_pair_key: XXBTZUSD, kraken_altname: XBTUSD, kraken_wsname: XBT/USD}}
+
+market_truth:
+  minimum_quorum: 2
+  max_source_age_seconds: 20
+  freshness_half_life_seconds: 5
+  latency_scale_ms: 1000
+  outlier_threshold_bps: 150
+  usd_equivalent_quotes: [USD, USDC, USDT]
+  quote_normalization: none
+  poll_interval_seconds: 5
+  deep_refresh_seconds: 15
+
+market_catalog:
+  refresh_interval_seconds: 900
+  max_age_seconds: 1800
+  minimum_quote_turnover_24h: 1000000
+  maximum_spread_bps: 50
+  max_exchange_timestamp_age_seconds: 180
+  exchange_timestamp_future_tolerance_seconds: 5
+  allowed_quote_assets: [USD, USDT, USDC]
+  excluded_base_assets: [USD, USDT, USDC, BUSD, FDUSD, TUSD, DAI, EUR, GBP]
+
+# Descriptive Phase 7B observations for the exact venue instruments in the
+# selected deep watchlist. This path is independent of the SOL/HYPE ensemble.
+market_analysis:
+  enabled: true
+  intervals: [5m, 15m, 1h, 4h]
+  poll_interval_seconds: 15
+  instruments_per_cycle: 5
+  history_candles: 80
+  minimum_history: 25
+  maximum_cached_candles: 10000
+  maximum_requests_per_cycle: 30
+  candle_stale_seconds: 1800
+  book_stale_seconds: 60
+  derivatives_ttl_seconds: 60
+  # Immutable five-minute snapshots and bounded point-in-time observation only.
+  observation_cadence_seconds: 300
+  outcome_max_latency_seconds: 60
+  outcome_requests_per_cycle: 8
+  shadow_monitor_requests_per_cycle: 2
+  fee_bps_per_side: 4.0
+  slippage_bps_per_side: 2.0
+  feature_version: descriptive-v1
+
+# Phase 08: bounded virtual, spot-only experiment. These are unvalidated
+# research choices; no order placement or predictive promotion is enabled.
+strategy_shadow:
+  initial_equity: 10000
+  allowed_quotes: [USD, USDT]
+  risk_fraction: 0.001
+  max_total_risk_fraction: 0.01
+  max_notional: 250
+  entry_ttl_seconds: 60
+  maximum_holding_seconds: 3600
+  cooldown_seconds: 900
+  max_bbo_age_seconds: 30
+  max_entry_spread_bps: 30
+  fee_bps_per_side: 4
+  slippage_bps_per_side: 2
+
+universe:
+  max_scan_instruments: 150
+  max_deep_watchlist: 30
+  bucket_minimums:
+    majors_l1: 2
+    derivatives_movers: 2
+    dex_memecoin_candidates: 0
+    liquid_spot_candidates: 0
+  weights:
+    liquidity: 0.20
+    volume: 0.30
+    spread: 0.15
+    change_magnitude: 0.10
+    derivatives_activity: 0.10
+    freshness: 0.15
+
+events:
+  enabled: true
+  dedup_similarity: 0.72
+  dedup_window_hours: 72
+  stale_after_seconds: 900
+  llm:
+    enabled: false
+    purpose: extraction_classification_summary_only
+  entities:
+    - project_id: solana
+      canonical_asset_id: native:solana
+      name: Solana
+      tickers: [SOL]
+      contracts: []
+      official_account_ids: []
+      official_domains: [solana.com]
+    - project_id: hyperliquid
+      canonical_asset_id: native:hyperliquid
+      name: Hyperliquid
+      tickers: [HYPE]
+      contracts: []
+      official_account_ids: []
+      official_domains: [hyperfoundation.org, hyperliquid.xyz]
+    - project_id: bitcoin
+      canonical_asset_id: native:bitcoin
+      name: Bitcoin
+      tickers: [BTC]
+      contracts: []
+      official_account_ids: []
+      official_domains: [bitcoin.org]
+    - project_id: official-trump
+      canonical_asset_id: "solana:6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN"
+      name: Official Trump
+      tickers: [TRUMP]
+      contracts:
+        - {chain_id: solana, address: 6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN}
+      official_account_ids: []
+      official_domains: [gettrumpmemes.com]
+  sources:
+    official_x:
+      adapter: x_filtered_stream
+      source_tier: official_project
+      official: true
+      enabled: false
+      url: https://api.x.com/2/tweets/search/stream
+      post_url_template: "https://x.com/i/web/status/{post_id}"
+      allowed_domains: [api.x.com, x.com]
+      bearer_token_env: X_BEARER_TOKEN
+      connect_timeout_seconds: 8
+      read_timeout_seconds: 45
+      reconnect_max_seconds: 30
+      verified_account_ids: []
+      account_project_ids: {}
+    federal_reserve_monetary:
+      adapter: rss_atom
+      source_tier: regulator
+      official: true
+      enabled: true
+      url: https://www.federalreserve.gov/feeds/press_monetary.xml
+      allowed_domains: [federalreserve.gov]
+      author_id: federal-reserve-board
+      language: en
+      request_timeout_seconds: 8
+      poll_interval_seconds: 300
+      max_items_per_poll: 30
+    sec_press_releases:
+      adapter: rss_atom
+      source_tier: regulator
+      official: true
+      enabled: true
+      url: https://www.sec.gov/news/pressreleases.rss
+      allowed_domains: [sec.gov]
+      author_id: us-sec
+      language: en
+      request_timeout_seconds: 8
+      poll_interval_seconds: 300
+      max_items_per_poll: 30
+    bls_calendar:
+      adapter: ics_calendar
+      source_tier: macro_calendar
+      official: true
+      enabled: false
+      disabled_reason: "HTTP 403 in the current verification environment; no authentication bypass. Re-enable only after a successful public HTTP 200 smoke check."
+      url: https://www.bls.gov/schedule/news_release/bls.ics
+      allowed_domains: [bls.gov]
+      author_id: us-bls
+      language: en
+      request_timeout_seconds: 8
+      poll_interval_seconds: 21600
+      max_retry_backoff_seconds: 86400
+      max_items_per_poll: 200
+    kraken_status:
+      adapter: rss_atom
+      source_tier: official_exchange
+      official: true
+      enabled: true
+      url: https://status.kraken.com/history.atom
+      allowed_domains: [status.kraken.com]
+      author_id: kraken-status
+      language: en
+      request_timeout_seconds: 8
+      poll_interval_seconds: 300
+      max_items_per_poll: 30
+    github_project_releases:
+      adapter: github
+      source_tier: primary_code
+      official: true
+      enabled: false
+      api_url: https://api.github.com
+      web_url: "https://github.com/{owner}/{repo}"
+      allowed_domains: [api.github.com, github.com]
+      repository: OWNER/REPOSITORY
+      resource: releases
+      token_env: GITHUB_EVENT_TOKEN
+      request_timeout_seconds: 8
+      poll_interval_seconds: 900
+    github_security_advisories:
+      adapter: github
+      source_tier: security_advisory
+      official: true
+      enabled: false
+      api_url: https://api.github.com
+      web_url: "https://github.com/{owner}/{repo}"
+      allowed_domains: [api.github.com, github.com]
+      repository: OWNER/REPOSITORY
+      resource: security-advisories
+      token_env: GITHUB_EVENT_TOKEN
+      request_timeout_seconds: 8
+      poll_interval_seconds: 900
+
+onchain:
+  enabled: true
+  paper_notionals_usd: [100, 500, 1000]
+  enrichment:
+    jupiter_quote:
+      enabled: false
+      url: https://api.jup.ag/swap/v2/order
+      api_key_env: JUPITER_API_KEY
+      request_timeout_seconds: 8
+      min_interval_seconds: 2.1
+      stable_mint: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+      stable_decimals: 6
+  risk_filter:
+    paper_notional_usd: 1000
+    minimum_liquidity_usd: 25000
+    minimum_sellable_liquidity_multiple: 3
+    maximum_slippage_bps: 500
+    maximum_top10_holder_percent: 70
+    maximum_sell_tax_percent: 10
+    maximum_manipulation_risk: 55
+    require_official_identity: true
+    require_revoked_mint_authority: true
+    require_revoked_freeze_authority: true
+    ttl_minutes: 30
+  providers:
+    solana_mainnet:
+      chain_id: solana
+      adapter: solana_rpc
+      enabled: false
+      rpc_url: https://api.mainnet-beta.solana.com
+      websocket_url: wss://api.mainnet-beta.solana.com
+      authorization_env: SOLANA_RPC_BEARER_TOKEN
+      request_timeout_seconds: 8
+      connect_timeout_seconds: 8
+      read_timeout_seconds: 30
+      stale_after_seconds: 120
+      program_ids:
+        - TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA
+        - TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb
+      # Exact DEX program, mint and vault identities are mandatory. Empty means
+      # pool/liquidity/trade evidence is NOT_AVAILABLE rather than inferred.
+      configured_pools: []
+    base_mainnet:
+      chain_id: "eip155:8453"
+      adapter: base_rpc
+      enabled: false
+      rpc_url: https://mainnet.base.org
+      websocket_url: ""
+      authorization_env: BASE_RPC_BEARER_TOKEN
+      request_timeout_seconds: 8
+      connect_timeout_seconds: 8
+      read_timeout_seconds: 30
+      stale_after_seconds: 120
+      poll_interval_seconds: 4
+      max_receipts_per_block: 20
+      watched_addresses: []
+      topics: []
+
+alerts:
+  alert_threshold: 40.0
+  confirmation_cycles: 2
+  realert_delta: 5.0
+  cooldown_minutes: 15
+  strict_alert_mode: false
+  enabled: true
+  critical_error_cooldown_minutes: 60
+  minimum_directional_gap: 10.0
+  minimum_confidence: 55.0
+  minimum_signal_strength: 55.0
+  maximum_wait: 45.0
+  minimum_component_confirmations: 2
+  strength_level_step: 10.0
+  weakened_delta: 8.0
+  invalidated_delta: 14.0
+  target_change_percent: 0.5
+  fast_event_confidence: 70.0
+  fast_event_strength: 70.0
+  feed_warning_after_seconds: 180
+
+storage:
+  sqlite_path: data/analyzer.db
+  raw_path: data/raw
+  models_path: models
+  logs_path: logs
+  raw_rotation_minutes: 60
+  raw_retention_days: 7
+
+models:
+  horizons:
+    15m:
+      source_interval: 5m
+      steps: 3
+    1h:
+      source_interval: 15m
+      steps: 4
+    4h:
+      source_interval: 1h
+      steps: 4
+  min_training_samples: 500
+  min_class_samples: 30
+  min_balanced_accuracy: 0.36
+  max_brier_score: 0.75
+  min_brier_skill: 0.0
+  barrier_atr_multiplier: 1.25
+  walk_forward_splits: 3
+  random_state: 42
+  auto_retrain:
+    enabled: false
+    interval_hours: 24
+    timeout_seconds: 900
+
+ensemble:
+  base_weights:
+    technical: 0.25
+    structure: 0.05
+    derivatives: 0.00
+    orderbook: 0.00
+    tradeflow: 0.00
+    statistical: 0.23
+    ml: 0.40
+    btc_context: 0.07
+  warming_prior: [0.24, 0.24, 0.52]
+
+signal_quality:
+  max_data_age_seconds: 180
+  volatility_spike_ratio: 2.0
+  fast_flow_imbalance: 0.65
+  btc_shock_return: 0.025
+
+forecast_performance:
+  minimum_samples: 100
+  regularization_samples: 300
+  weight_multiplier_bounds: [0.8, 1.2]
+  max_weight_adjustment: 0.15
+  overconfidence_tolerance: 0.05
+  max_wait_shift: 0.20
+
+research:
+  # Offline-only Phase 4 protocol. This section is not read by the live signal path.
+  horizons: [5m, 15m, 1h, 4h, 24h]
+  walk_forward_folds: 3
+  untouched_test_fraction: 0.20
+  embargo_seconds: 300
+  minimum_train_rows: 500
+  minimum_partition_rows: 50
+  top_k: 3
+  requested_notional_usd: 1000
+  threshold_candidates: [0.45, 0.50, 0.55, 0.60, 0.65, 0.70]
+  regularization_candidates: [0.1, 1.0]
+  random_state: 42
+  ranking_gates:
+    minimum_predicted_net_return: 0.0
+    minimum_exit_feasibility_probability: 0.60
+    maximum_predicted_adverse_excursion: 0.05
+    maximum_predicted_volatility: 0.20
+  promotion:
+    minimum_test_samples: 200
+    minimum_trades: 30
+    minimum_time_blocks: 3
+    maximum_drawdown: 0.20
+    maximum_ece: 0.10
+    require_all_blocks_positive: true
+  execution_costs:
+    entry_fee_bps: 4.0
+    exit_fee_bps: 4.0
+    round_trip_spread_bps: 4.0
+    round_trip_slippage_bps: 8.0
+    latency_bps: 2.0
+    funding_bps: 0.0
+    impact_bps: 2.0
+    maximum_liquidity_participation: 0.05
+    minimum_fill_fraction: 0.25
+
+paper:
+  # Phase 5 is deliberately shadow-only. Any other mode is rejected at startup.
+  shadow_mode: true
+  initial_equity_usd: 100000
+  major_risk_fraction: 0.0025
+  memecoin_risk_fraction: 0.0005
+  daily_loss_limit_fraction: 0.015
+  maximum_paper_risk_usd: 1000
+  maximum_gross_exposure_fraction: 0.50
+  maximum_cluster_exposure_fraction: 0.15
+  maximum_concurrent_positions: 8
+  maximum_liquidity_participation: 0.01
+  minimum_liquidity_usd: 25000
+  minimum_exit_feasibility_probability: 0.60
+  maximum_data_age_seconds: 180
+  maximum_venue_divergence_bps: 150
+  maximum_predicted_volatility: 0.20
+  maximum_predicted_mae: 0.05
+  minimum_calibrated_probability: 0.50
+  volatility_risk_multiplier: 1.0
+  maximum_gap_bps: 500
+  cooldown_seconds: 900
+  recommendation_ttl_seconds: 1800
+  entry_fee_bps: 4
+  exit_fee_bps: 4
+  liquidity_loss_fraction: 0.50
+  model_drift_min_samples: 100
+  model_drift_min_balanced_accuracy: 0.30
+  model_drift_max_brier: 0.75
+  model_drift_max_ece: 0.15

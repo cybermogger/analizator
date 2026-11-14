@@ -1,0 +1,115 @@
+{
+  "identity": {
+    "mint": "6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN",
+    "token_mint": "6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN",
+    "quote_mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "pool_id": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "program_id": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+    "token_vault": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+    "quote_vault": "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
+  },
+  "mint_snapshot": {
+    "slot": 312345680,
+    "account": {
+      "owner": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+      "data": {"parsed": {"type": "mint", "info": {
+        "decimals": 6, "supply": "1000000000000",
+        "mintAuthority": null, "freezeAuthority": null, "isInitialized": true
+      }}}
+    },
+    "supply": {"amount": "1000000000000", "decimals": 6, "uiAmountString": "1000000"},
+    "largest_accounts": [
+      {"address": "EAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "amount": "120000000000", "decimals": 6},
+      {"address": "EBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "amount": "60000000000", "decimals": 6},
+      {"address": "ECAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "amount": "40000000000", "decimals": 6},
+      {"address": "EDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "amount": "30000000000", "decimals": 6},
+      {"address": "EEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "amount": "25000000000", "decimals": 6},
+      {"address": "EFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "amount": "20000000000", "decimals": 6},
+      {"address": "EGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "amount": "18000000000", "decimals": 6},
+      {"address": "EHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "amount": "15000000000", "decimals": 6},
+      {"address": "EJAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "amount": "12000000000", "decimals": 6},
+      {"address": "EKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "amount": "10000000000", "decimals": 6}
+    ]
+  },
+  "pool_accounts": {
+    "pool": {"owner": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB", "data": ["AA==", "base64"]},
+    "token_vault": {
+      "owner": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+      "data": {"parsed": {"type": "account", "info": {
+        "mint": "6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN",
+        "owner": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "tokenAmount": {"amount": "899000000000", "decimals": 6}
+      }}}
+    },
+    "quote_vault": {
+      "owner": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+      "data": {"parsed": {"type": "account", "info": {
+        "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "owner": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "tokenAmount": {"amount": "51000000000", "decimals": 6}
+      }}}
+    }
+  },
+  "pool_transaction": {
+    "slot": 312345681,
+    "blockTime": 1737165660,
+    "meta": {
+      "err": null, "transactionIndex": 4,
+      "preTokenBalances": [
+        {"accountIndex": 2, "mint": "6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN", "uiTokenAmount": {"amount": "900000000000", "decimals": 6}},
+        {"accountIndex": 3, "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", "uiTokenAmount": {"amount": "50000000000", "decimals": 6}}
+      ],
+      "postTokenBalances": [
+        {"accountIndex": 2, "mint": "6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN", "uiTokenAmount": {"amount": "899000000000", "decimals": 6}},
+        {"accountIndex": 3, "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", "uiTokenAmount": {"amount": "51000000000", "decimals": 6}}
+      ]
+    },
+    "transaction": {
+      "signatures": ["4PooLSwapSignature111111111111111111111111111111111111111111111111"],
+      "message": {
+        "accountKeys": [
+          {"pubkey": "Buyer11111111111111111111111111111111111111", "signer": true, "writable": true},
+          {"pubkey": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "signer": false, "writable": true},
+          {"pubkey": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", "signer": false, "writable": true},
+          {"pubkey": "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD", "signer": false, "writable": true},
+          {"pubkey": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB", "signer": false, "writable": false}
+        ],
+        "instructions": [{
+          "programId": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+          "accounts": [1, 2, 3], "data": "3Bxs4NN8M2Yn4TLb"
+        }]
+      }
+    }
+  },
+  "blocks": {
+    "312345678": {"blockhash": "9BlockHash11111111111111111111111111111111111111", "previousBlockhash": "8PreviousBlockHash111111111111111111111111111111", "blockTime": 1737165651},
+    "312345680": {"blockhash": "7SnapshotBlockHash1111111111111111111111111111111", "previousBlockhash": "9BlockHash11111111111111111111111111111111111111", "blockTime": 1737165658},
+    "312345681": {"blockhash": "6PoolBlockHash11111111111111111111111111111111111", "previousBlockhash": "7SnapshotBlockHash1111111111111111111111111111111", "blockTime": 1737165660}
+  },
+  "jupiter": {
+    "buy": {
+      "inputMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      "outputMint": "6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN",
+      "inAmount": "1000000000", "outAmount": "5000000000",
+      "priceImpactPct": "1.0", "transaction": null, "routePlan": []
+    },
+    "sell": {
+      "inputMint": "6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN",
+      "outputMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      "inAmount": "5000000000", "outAmount": "970000000",
+      "priceImpactPct": "2.0", "transaction": null, "routePlan": []
+    },
+    "buy_3000": {
+      "inputMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      "outputMint": "6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN",
+      "inAmount": "3000000000", "outAmount": "15000000000",
+      "priceImpactPct": "2.0", "transaction": null, "routePlan": []
+    },
+    "sell_3000": {
+      "inputMint": "6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN",
+      "outputMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      "inAmount": "15000000000", "outAmount": "2850000000",
+      "priceImpactPct": "3.0", "transaction": null, "routePlan": []
+    }
+  }
+}

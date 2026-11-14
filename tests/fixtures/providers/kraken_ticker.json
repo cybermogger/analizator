@@ -1,0 +1,16 @@
+{
+  "channel": "ticker",
+  "type": "update",
+  "data": [
+    {
+      "symbol": "SOL/USD",
+      "bid": 149.97,
+      "bid_qty": 50.0,
+      "ask": 150.03,
+      "ask_qty": 45.0,
+      "last": 150.0,
+      "volume": 90000.0,
+      "timestamp": "2023-11-14T22:13:20.223456Z"
+    }
+  ]
+}

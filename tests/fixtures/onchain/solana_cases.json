@@ -1,0 +1,14 @@
+{
+  "official_launch": {
+    "contract": "6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN",
+    "symbol": "TRUMP",
+    "expected_after_confirmation": "ELIGIBLE"
+  },
+  "liquidity_removal": {"risk": "MATERIAL_LIQUIDITY_REMOVAL"},
+  "honeypot_high_sell_tax": {"risk": "HONEYPOT_OR_UNSELLABLE"},
+  "concentrated_holders": {"risk": "CONCENTRATED_HOLDERS"},
+  "wash_volume": {"risk": "MANIPULATION_RISK"},
+  "bundled_sniper_wallets": {"risk": "MANIPULATION_RISK"},
+  "fake_ticker_contract": {"risk": "UNCONFIRMED_OFFICIAL_IDENTITY"},
+  "high_market_cap_poor_sellable_liquidity": {"risk": "PAPER_NOTIONAL_NOT_EXITABLE"}
+}

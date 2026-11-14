@@ -1,0 +1,23 @@
+{
+  "channel": "ticker",
+  "client_id": "",
+  "timestamp": "2023-11-14T22:13:20.123456Z",
+  "sequence_num": 42,
+  "events": [
+    {
+      "type": "update",
+      "tickers": [
+        {
+          "type": "ticker",
+          "product_id": "SOL-USD",
+          "price": "150.01",
+          "volume_24_h": "125000.0",
+          "best_bid": "149.98",
+          "best_bid_quantity": "75.0",
+          "best_ask": "150.04",
+          "best_ask_quantity": "62.0"
+        }
+      ]
+    }
+  ]
+}

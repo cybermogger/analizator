@@ -1,0 +1,111 @@
+{
+  "case": "TRUMP launch causal replay, 2025-01-17 through 2025-01-19",
+  "contract": "6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN",
+  "evidence_urls": {
+    "official_post": "https://truthsocial.com/@realDonaldTrump/posts/113846888132979151",
+    "official_site": "https://gettrumpmemes.com/",
+    "official_exchange_confirmation": "https://www.hotcoin.com/en_US/support/article?code=25174883671085056&id=25174951837437952",
+    "secondary_timeline": "https://www.coingecko.com/learn/trump-memecoin"
+  },
+  "events": [
+    {
+      "raw_event_id": "unofficial-social:prelaunch-rumor",
+      "source_id": "unofficial-social",
+      "source_tier": "unofficial_social",
+      "author_id": "anonymous-account",
+      "url": "https://example.invalid/unverified/prelaunch-rumor",
+      "published_at": "2025-01-18T01:30:00Z",
+      "received_at": "2025-01-18T01:30:04Z",
+      "text": "Rumor: a token using the TRUMP ticker may launch soon",
+      "payload": {"event_type": "OFFICIAL_TOKEN_LAUNCH", "verification": "none"},
+      "authenticity": "unverified",
+      "explicit_project_id": null,
+      "contracts": []
+    },
+    {
+      "raw_event_id": "official-truth-social:trump-launch-post",
+      "source_id": "official-truth-social",
+      "source_tier": "official_founder",
+      "author_id": "official-donald-trump-account-id",
+      "url": "https://truthsocial.com/@realDonaldTrump/posts/113846888132979151",
+      "published_at": "2025-01-18T02:00:51Z",
+      "received_at": "2025-01-18T02:00:55Z",
+      "text": "My NEW Official Trump Meme is HERE! GET YOUR $TRUMP NOW. Go to gettrumpmemes.com",
+      "payload": {"event_type": "OFFICIAL_TOKEN_LAUNCH", "fixture": "official-post"},
+      "authenticity": "verified",
+      "explicit_project_id": "official-trump",
+      "contracts": []
+    },
+    {
+      "raw_event_id": "official-site:trump-contract",
+      "source_id": "official-site",
+      "source_tier": "official_project",
+      "author_id": "gettrumpmemes.com",
+      "url": "https://gettrumpmemes.com/",
+      "published_at": "2025-01-18T02:00:51Z",
+      "received_at": "2025-01-18T02:01:02Z",
+      "text": "The only official TRUMP meme contract is 6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN",
+      "payload": {"event_type": "OFFICIAL_TOKEN_LAUNCH", "confirmation_kind": "official-contract"},
+      "authenticity": "verified",
+      "explicit_project_id": "official-trump",
+      "related_event_id": "official-truth-social:trump-launch-post",
+      "contracts": [["solana", "6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN"]]
+    },
+    {
+      "raw_event_id": "exchange:trump-listing-confirmation",
+      "source_id": "official-exchange",
+      "source_tier": "official_exchange",
+      "author_id": "exchange-announcements",
+      "url": "https://www.hotcoin.com/en_US/support/article?code=25174883671085056&id=25174951837437952",
+      "published_at": "2025-01-18T10:31:00Z",
+      "received_at": "2025-01-18T10:31:07Z",
+      "text": "Listing confirmation for Official Trump contract 6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN",
+      "payload": {"event_type": "OFFICIAL_TOKEN_LAUNCH", "confirmation_kind": "listing"},
+      "authenticity": "verified",
+      "explicit_project_id": "official-trump",
+      "related_event_id": "official-truth-social:trump-launch-post",
+      "contracts": [["solana", "6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN"]]
+    },
+    {
+      "raw_event_id": "market:trump-liquidity-confirmation",
+      "source_id": "market-confirmation",
+      "source_tier": "market_confirmation",
+      "author_id": "normalized-market-data",
+      "url": "https://example.invalid/internal/market-confirmation",
+      "published_at": "2025-01-18T11:00:00Z",
+      "received_at": "2025-01-18T11:00:01Z",
+      "text": "Observed volume and liquidity confirmation for the exact Official Trump contract",
+      "payload": {"event_type": "OFFICIAL_TOKEN_LAUNCH", "confirmation_kind": "volume_liquidity"},
+      "authenticity": "verified",
+      "explicit_project_id": "official-trump",
+      "related_event_id": "official-truth-social:trump-launch-post",
+      "contracts": [["solana", "6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN"]]
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "claim:onchain-trade:fixture-1",
+      "claim_type": "confirmed_onchain_trade",
+      "evidence_url": "https://solscan.io/tx/fixture-transaction-id",
+      "payload": {"transaction_id": "fixture-transaction-id", "wallet": "fixture-wallet", "identity": null}
+    },
+    {
+      "claim_id": "claim:wallet-cluster:fixture-1",
+      "claim_type": "attributed_wallet_cluster",
+      "evidence_url": "https://example.invalid/research/wallet-cluster",
+      "payload": {"cluster": "fixture-cluster", "attribution": "unverified", "person": null}
+    },
+    {
+      "claim_id": "claim:social-kimchi:fixture-1",
+      "claim_type": "unverified_social_claim",
+      "evidence_url": "https://example.invalid/unverified/kimchi-claim",
+      "payload": {"claim": "Kimchi attribution", "verified": false}
+    },
+    {
+      "claim_id": "claim:realized-net:fixture-1",
+      "claim_type": "realized_net_result",
+      "evidence_url": "https://example.invalid/ledger/realized-fixture",
+      "payload": {"proceeds": 1600.0, "cost_basis": 1000.0, "fees": 20.0, "slippage": 30.0, "peak_mark_to_market": 5000.0}
+    }
+  ]
+}
