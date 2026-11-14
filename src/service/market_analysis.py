@@ -128,11 +128,24 @@ class MultiAssetAnalysisService:
                 del self._derivative_attempts[key]
 
     def _eligible_members(self) -> list[Instrument]:
-        items = [
-            self.market_data.instruments.get(row.instrument_id)
-            for row in self.market_data.membership if row.deep_watchlist
-        ]
-        return [item for item in items if item.active][:30]
+        items: list[Instrument] = []
+        seen: set[str] = set()
+        for row in self.market_data.membership:
+            if not row.deep_watchlist or row.instrument_id in seen:
+                continue
+            try:
+                item = self.market_data.instruments.get(row.instrument_id)
+            except KeyError:
+                # Registry and universe membership can change between refreshes.
+                # A vanished market must not prevent healthy neighbors from
+                # receiving their scheduled analysis.
+                continue
+            if item.active:
+                seen.add(item.instrument_id)
+                items.append(item)
+                if len(items) == 30:
+                    break
+        return items
 
     def _provider_timeout(self, instrument: Instrument) -> float:
         settings = self.market_data.config.get("providers", {}).get(instrument.provider, {})

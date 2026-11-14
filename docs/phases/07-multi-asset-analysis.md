@@ -106,3 +106,7 @@ Phase 7A is ready for review when bounded offline suites pass, CEX catalog/BBO s
 - Syntax validation passed for 130 Python source files without imports or bytecode writes; `git diff --check` passed. Earlier bounded Stage A/B public-read-only smoke evidence remains as recorded; this final pass made no live requests and started no daemon, trading or Telegram delivery.
 - Mini App remains deferred. All Mini App and A/B/C changes remain uncommitted; HEAD remains `68bc8a9705a70491a93fecb487b1f7ba7536a388`. The temporary active-work routing note was removed from `AGENTS.md`.
 - This acceptance verifies implementation and offline behavior, not predictive profitability. Real performance remains `NOT_EVALUABLE`; event/on-chain context remains `NO_VERIFIED_CONTEXT` until an exact, causal source join is configured. Synthetic outcomes are not real trading results.
+
+### Post-import registry resilience
+
+The deep-universe selector now skips a stale membership entry whose instrument disappeared from the registry and ignores duplicate exact instrument IDs. A delisted or transiently inconsistent member cannot abort analysis of the other selected markets or consume multiple rotation slots. An offline BONK regression verifies the surviving neighbor still receives all configured closed-candle intervals.

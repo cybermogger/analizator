@@ -169,6 +169,18 @@ def test_nonlegacy_perpetual_gets_real_causal_multitimeframe_analysis():
     assert health["analyzed_instruments"] == 1 and service._requests == 6
 
 
+def test_stale_universe_member_does_not_abort_neighbor_analysis():
+    instrument = make_instrument("binance", "spot", "BONK", "USDT", "BONKUSDT")
+    data, provider = make_market_data(instrument)
+    missing = UniverseMembership("binance:spot:DELISTED-USDT", "unresolved:binance:DELISTED:USDT",
+        UniverseBucket.DERIVATIVES_MOVERS, 1.0, True)
+    data.membership = (missing, *data.membership, *data.membership)
+    service = MultiAssetAnalysisService(data, {"instruments_per_cycle": 2})
+    asyncio.run(service.refresh_once())
+    assert service.get(instrument.instrument_id)["observation_status"] == "OBSERVED"
+    assert len(provider.calls) == len(INTERVAL_MS)
+
+
 def test_normal_nonlegacy_spot_card_creates_frozen_shadow_variants(tmp_path):
     instrument = make_instrument("binance", "spot", "BONK", "USDT", "BONKUSDT")
     data, _ = make_market_data(instrument)
