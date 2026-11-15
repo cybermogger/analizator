@@ -44,6 +44,9 @@ def test_shadow_variants_persist_exact_identity_and_do_not_claim_probability(tmp
     assert all(p.semantics.startswith("heuristic") and p.status == "PROPOSED" for p in plans)
     assert svc.evaluate(card) == plans
     assert svc.summary()["baseline"]["plans"] == 1
+    recent = svc.recent_disciplined_plans()
+    assert len(recent) == 1 and recent[0]["state"] == "PENDING"
+    assert recent[0]["plan"]["variant"] == "disciplined"
     db.close()
 
 

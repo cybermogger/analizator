@@ -75,6 +75,7 @@ class StrategyShadow:
           observed_at_ms INTEGER NOT NULL, payload_json TEXT NOT NULL,
           UNIQUE(variant,instrument_id,observed_at_ms))""")
         storage.execute("CREATE INDEX IF NOT EXISTS strategy_shadow_plans_instrument ON strategy_shadow_plans(instrument_id,observed_at_ms)")
+        storage.execute("CREATE INDEX IF NOT EXISTS strategy_shadow_plans_recent ON strategy_shadow_plans(variant,observed_at_ms DESC)")
         storage.execute("""CREATE TRIGGER IF NOT EXISTS strategy_shadow_immutable_update
           BEFORE UPDATE ON strategy_shadow_plans BEGIN SELECT RAISE(ABORT,'immutable'); END""")
         storage.execute("""CREATE TRIGGER IF NOT EXISTS strategy_shadow_immutable_delete
@@ -84,6 +85,7 @@ class StrategyShadow:
           instrument_id TEXT NOT NULL, event_at_ms INTEGER NOT NULL, event_type TEXT NOT NULL,
           payload_json TEXT NOT NULL, FOREIGN KEY(plan_id) REFERENCES strategy_shadow_plans(plan_id))""")
         storage.execute("CREATE INDEX IF NOT EXISTS strategy_shadow_close_lookup ON strategy_shadow_events(event_type,variant,plan_id)")
+        storage.execute("CREATE INDEX IF NOT EXISTS strategy_shadow_events_plan ON strategy_shadow_events(plan_id,event_at_ms)")
         for op in ("UPDATE", "DELETE"):
             storage.execute(f"CREATE TRIGGER IF NOT EXISTS strategy_shadow_events_no_{op.lower()} BEFORE {op} ON strategy_shadow_events BEGIN SELECT RAISE(ABORT,'immutable'); END")
         # Mutable query projection; immutable plans/events remain the authority.
@@ -506,3 +508,13 @@ class StrategyShadow:
     def latest_plans(self, instrument_id: str) -> list[dict[str, Any]]:
         rows = self.storage.query("SELECT payload_json FROM strategy_shadow_plans WHERE instrument_id=? ORDER BY observed_at_ms DESC LIMIT 2", (instrument_id,))
         return [{"plan": json.loads(row["payload_json"]), "events": self._events(json.loads(row["payload_json"])["plan_id"])} for row in rows]
+
+    def recent_disciplined_plans(self, limit: int = 20) -> list[dict[str, Any]]:
+        """Bounded virtual-plan journal, including terminal outcomes and missed entries."""
+        rows = self.storage.query("""SELECT p.payload_json,s.state FROM strategy_shadow_plans p
+            JOIN strategy_shadow_state s ON s.plan_id=p.plan_id
+            WHERE p.variant='disciplined' AND s.state!='NO_TRADE'
+            ORDER BY p.observed_at_ms DESC,p.plan_id DESC LIMIT ?""",
+            (max(1, min(20, int(limit))),))
+        return [{"plan": (plan := json.loads(row["payload_json"])),
+            "state": row["state"], "events": self._events(plan["plan_id"])} for row in rows]

@@ -71,8 +71,27 @@ def snapshot(service: Any) -> dict[str, Any]:
             "official_identity_confirmed": candidate.get("official_identity_confirmed"),
             "risk_flags": candidate.get("risk_flags", [])[:5],
         })
+    paper_journal = []
+    for record in service.strategy_shadow.recent_disciplined_plans(20):
+        plan = record["plan"]
+        events_by_type = {event.get("type"): event for event in record["events"]
+            if event.get("type") in {"FILLED", "CLOSED", "EXPIRED", "REJECTED"}}
+        fill = events_by_type.get("FILLED") or {}
+        close = events_by_type.get("CLOSED") or {}
+        paper_journal.append({
+            "plan_id": plan.get("plan_id"), "instrument_id": plan.get("instrument_id"),
+            "venue": plan.get("venue"), "quote": plan.get("quote"),
+            "status": record["state"], "observed_at_ms": plan.get("observed_at_ms"),
+            "expires_at_ms": plan.get("expires_at_ms"),
+            "entry_reference": plan.get("entry_reference"), "stop": plan.get("stop"),
+            "target": plan.get("target"), "notional": plan.get("notional"),
+            "filled_at_ms": fill.get("at"), "filled_price": fill.get("price"),
+            "closed_at_ms": close.get("at"), "close_reason": close.get("reason"),
+            "realized_net": close.get("net_pnl"),
+        })
     return {"as_of_ms": now, "markets": cards, "signals": signals[:10], "events": events,
-        "candidates": candidates, "market_count": len(cards), "event_count": len(events),
+        "candidates": candidates, "paper_journal": paper_journal,
+        "paper_status": "NOT_EVALUABLE", "market_count": len(cards), "event_count": len(events),
         "semantics": "Наблюдение и экспериментальные гипотезы; рейтинг покрытия не является вероятностью прибыли."}
 
 

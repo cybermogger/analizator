@@ -28,7 +28,7 @@ def fake_service():
     onchain = SimpleNamespace(latest=lambda limit: [{"chain_id": "solana",
         "contract_address": "verified-mint", "symbol": "NEW", "status": "OBSERVE",
         "risk_flags": ["liquidity_unverified"], "private_payload": "must-not-leak"}])
-    strategy = SimpleNamespace(latest_plans=lambda iid: [])
+    strategy = SimpleNamespace(latest_plans=lambda iid: [], recent_disciplined_plans=lambda limit: [])
     return SimpleNamespace(market_analysis=market, events=events, onchain=onchain,
         strategy_shadow=strategy)
 
@@ -56,6 +56,24 @@ def test_snapshot_exposes_only_fresh_unfilled_disciplined_plan():
     assert "must-not-leak" not in str(result)
     service.strategy_shadow.latest_plans = lambda iid: [{"plan": plan, "events": [{"type": "FILLED"}]}]
     assert snapshot(service)["signals"] == []
+
+
+def test_snapshot_paper_journal_whitelists_closed_virtual_outcome():
+    service = fake_service()
+    service.strategy_shadow.recent_disciplined_plans = lambda limit: [{
+        "plan": {"plan_id": "plan-1", "instrument_id": "binance:spot:BONK-USDT",
+            "venue": "binance-spot", "quote": "USDT", "observed_at_ms": 1000,
+            "entry_reference": .00001, "stop": .000009, "target": .000012,
+            "notional": 100, "private_payload": "must-not-leak"},
+        "state": "CLOSED", "events": [
+            {"type": "FILLED", "at": 2000, "price": .0000101, "secret": "must-not-leak"},
+            {"type": "CLOSED", "at": 3000, "net_pnl": -1.25, "reason": "STOP"}],
+    }]
+    result = snapshot(service)
+    assert result["paper_status"] == "NOT_EVALUABLE"
+    assert result["paper_journal"][0]["realized_net"] == -1.25
+    assert result["paper_journal"][0]["status"] == "CLOSED"
+    assert "must-not-leak" not in str(result)
 
 
 @pytest.mark.asyncio

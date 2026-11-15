@@ -44,6 +44,25 @@ function drawSignals(signals) {
     row.append(main); row.append(el("div", "event-meta", `до ${new Date(signal.expires_at_ms).toLocaleTimeString("ru-RU")}`)); list.append(row);
   }
 }
+function drawPaperJournal(records) {
+  const list = $("paper-list"); list.replaceChildren();
+  if (!records.length) { list.append(el("div", "empty", "Пока нет виртуальных сетапов — анализатор продолжает наблюдение")); return; }
+  const labels = { PENDING: "ОЖИДАЕТ ВХОДА", OPEN: "ВИРТУАЛЬНО ОТКРЫТ", CLOSED: "ЗАКРЫТ", EXPIRED: "ВХОД ПРОПУЩЕН", REJECTED: "ОТКЛОНЁН" };
+  for (const record of records) {
+    const row = el("article", "event"); row.append(el("div", "event-type", labels[record.status] || "НАБЛЮДЕНИЕ"));
+    const main = el("div", "event-main"); main.append(el("strong", "", record.instrument_id || "—"));
+    main.append(el("p", "", `Ориентир ${price(record.entry_reference)} · стоп ${price(record.stop)} · цель ${price(record.target)} · до ${price(record.notional)} ${record.quote || ""}`));
+    if (record.status === "CLOSED" && Number.isFinite(Number(record.realized_net))) {
+      const net = Number(record.realized_net);
+      main.append(el("p", "", `Виртуальный итог после модельных издержек: ${net >= 0 ? "+" : ""}${net.toFixed(4)} ${record.quote || ""} · ${record.close_reason || "закрытие"}`));
+    } else if (record.status === "OPEN") {
+      main.append(el("p", "", `Виртуальный вход ${price(record.filled_price)}; итог ещё неизвестен.`));
+    } else if (record.status === "PENDING") {
+      main.append(el("p", "", "Вход ещё не подтверждён свежей котировкой; результат неизвестен."));
+    }
+    row.append(main); row.append(el("div", "event-meta", age(record.observed_at_ms))); list.append(row);
+  }
+}
 function drawCandidates(candidates) {
   const list = $("candidate-list"); list.replaceChildren();
   if (!candidates.length) { list.append(el("div", "empty", "Ончейн-источники пока не дали проверенных кандидатов")); return; }
@@ -68,6 +87,7 @@ async function refresh() {
     $("connection").textContent = "СВЯЗЬ УСТАНОВЛЕНА"; $("connection").classList.remove("offline");
     $("system-status").textContent = "На связи"; $("system-note").textContent = markets.length ? "Данные доступны для просмотра" : "Ожидаем первый цикл анализа";
     drawMarkets(); drawSignals(Array.isArray(data.signals) ? data.signals : []);
+    drawPaperJournal(Array.isArray(data.paper_journal) ? data.paper_journal : []);
     drawEvents(Array.isArray(data.events) ? data.events : []);
     drawCandidates(Array.isArray(data.candidates) ? data.candidates : []);
   } catch {
