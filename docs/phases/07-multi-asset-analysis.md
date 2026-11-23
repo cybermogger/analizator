@@ -1,6 +1,5 @@
 # Phase 7A — Public CEX discovery
 
-> **Current checkpoint:** 7A discovery and Stage 7B descriptive analysis are present in the uncommitted worktree. Stage 7C causal snapshots and observational outcomes are implemented in this worktree and await final verification. Mini App changes remain separate uncommitted paths and must not be included in any later analytics commit.
 
 ## Objective and boundary
 
@@ -59,7 +58,6 @@ Offline provider contract fixtures cover Binance, Coinbase, and Kraken discovery
 
 ## Exit criteria
 
-Phase 7A is ready for review when bounded offline suites pass, CEX catalog/BBO source lineage and health are visible, failed/partial catalogs fail closed without false delistings, scan/deep budgets and provider request gates are enforced, exact identity is preserved, SQLite migration/integrity checks pass, and the existing production analysis plus Mini App changes remain intact. Live shadow operation and Phase 7B analysis of discovered assets require a separate review; do not infer profitability from catalog coverage.
 
 ## Phase 7B — Descriptive analysis of deep CEX instruments
 
@@ -70,7 +68,6 @@ Phase 7A is ready for review when bounded offline suites pass, CEX catalog/BBO s
 - For 5m/15m/1h/4h, sufficient history yields trend, four-bar momentum, per-bar realized log-return volatility and relative volume. A multi-timeframe agreement fraction is emitted only when at least two interval trends are usable. These values and the coverage/agreement score are descriptive, not calibrated forecasts or win probabilities.
 - The card includes exact provider/venue/market type/base/quote/venue symbol, source receive age, fresh BBO and L2 spread/top-five native-quote displayed depth/imbalance. Displayed depth is explicitly not executable capacity. Funding and OI are queried only for perpetual instruments whose adapter implements `DerivativesDataProvider`; unsupported combinations stay unavailable.
 - Provider and instrument failures are isolated; one call has the configured provider HTTP timeout clamped to 10 seconds and the analysis worker rotates instead of requesting all candle histories every 15 seconds. Health exposes analyzed/deep sizes, bounded-cache/request settings, cycle/failure counts and last receive age.
-- The normal daemon starts/stops the independent worker. Russian `/markets` and `/analyze <exact-instrument-id>` read its cached cards; ticker-only input is rejected as ambiguous. Legacy `/sol`, `/hype`, existing ensemble probabilities, paper decisions and Mini App are unchanged.
 
 ### Current progress / remaining review
 
@@ -78,7 +75,6 @@ Phase 7A is ready for review when bounded offline suites pass, CEX catalog/BBO s
 - Review remediation: receive and exchange timestamps are checked independently (future clock skew fails closed); candle identity, interval alignment, open/close and exchange close-time consistency are validated. Funding and OI have independent retry clocks and freshness views; failed refresh removes the old value from current metrics. Read views and health recalculate candle/book/derivative quality at request time. Deep-universe removal prunes all ephemeral per-instrument state; unexpected per-instrument compute errors become degraded cards while sibling instruments continue.
 - Tests: `tests/test_multi_asset_analysis.py` covers nonlegacy `1000PEPE`, exact identities, funding/OI age transitions and failed/independent retries, future timestamps and invalid lineage, open/future/gap/stale candles, delisting and repeated membership churn, cache bounds, Hyperliquid failure isolation, scheduler/commands, and per-instrument computation failure isolation.
 - Verification after remediation: focused Stage B/provider tests **39 passed**; full offline `tests/` **217 passed**; mocked `tests_integration/` **6 passed**; `compileall` for `src`, `tests`, `tests_integration` passed; `git diff --check` passed. Pytest disabled cache and dotenv loading. No live smoke was repeated, no daemon/Telegram was started, and no DB/log/raw runtime data or `.env` was accessed.
-- Stage B review fixes are implemented. No paid sources, RPC changes, Mini App changes, daemon start, Telegram delivery, or commit were performed for Stage C.
 - Source-specific constraints: Coinbase public candle and trade calls use the official public routes documented at [Coinbase public candles](https://docs.cdp.coinbase.com/api-reference/advanced-trade-api/rest-api/public/get-public-product-candles) and [Coinbase public market trades](https://docs.cdp.coinbase.com/api-reference/advanced-trade-api/rest-api/public/get-public-market-trades). Unsupported provider/interval calls remain `NOT_AVAILABLE`; no synthetic candles are substituted.
 
 ## Phase 7C — Causal observation snapshots and bounded outcomes
@@ -104,7 +100,6 @@ Phase 7A is ready for review when bounded offline suites pass, CEX catalog/BBO s
 - Phases 7A, 7B and 7C are accepted; no further implementation remains in this authorized scope. The supervising chat independently reviewed the final causal snapshot and outcome queue changes and reran the complete offline suites: **230 unit tests passed in 48.06s**, **6 integration tests passed in 4.18s**. Each test command had a 55-second subprocess timeout, with dotenv disabled before imports and pytest cache disabled. Existing NumPy/joblib deprecation warnings remain non-blocking.
 - Independent synthetic temporary-database probes confirmed that future book/funding/OI data are absent from both saved features and lineage, with explicit rejected quality; a shared BBO resolves only those horizon rows whose own target window contains its source times; responses received after the request began are accepted; fees frozen at 4 bps remain 4 after a runtime change to 40; zero gross return still pays costs. The ordinary refresh regression covers 30 markets for more than four hours with concurrent candle/derivative work, bounded requests and no missed available outcome deadlines.
 - Syntax validation passed for 130 Python source files without imports or bytecode writes; `git diff --check` passed. Earlier bounded Stage A/B public-read-only smoke evidence remains as recorded; this final pass made no live requests and started no daemon, trading or Telegram delivery.
-- Mini App remains deferred. All Mini App and A/B/C changes remain uncommitted; HEAD remains `68bc8a9705a70491a93fecb487b1f7ba7536a388`. The temporary active-work routing note was removed from `AGENTS.md`.
 - This acceptance verifies implementation and offline behavior, not predictive profitability. Real performance remains `NOT_EVALUABLE`; event/on-chain context remains `NO_VERIFIED_CONTEXT` until an exact, causal source join is configured. Synthetic outcomes are not real trading results.
 
 ### Post-import registry resilience

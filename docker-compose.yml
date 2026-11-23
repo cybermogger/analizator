@@ -14,8 +14,8 @@ services:
       ANALYZER_MODELS_PATH: /models
       ANALYZER_LOGS_PATH: /logs
       ANALYZER_HEARTBEAT_PATH: /data/heartbeat.json
-      ANALYZER_MINI_APP_HOST: 0.0.0.0
-      ANALYZER_MINI_APP_PORT: "8080"
+      ANALYZER_DASHBOARD_HOST: 0.0.0.0
+      ANALYZER_DASHBOARD_LOOPBACK_PROXY: "1"
       WATCHDOG_STALE_SECONDS: "180"
       WATCHDOG_STARTUP_GRACE_SECONDS: "180"
       WATCHDOG_CHECK_SECONDS: "5"
@@ -25,7 +25,7 @@ services:
       - ./models:/models
       - ./logs:/logs
     ports:
-      - "127.0.0.1:${MINI_APP_PORT:-8080}:8080"
+      - "127.0.0.1:8081:8081"
     healthcheck:
       test: ["CMD", "python", "status.py", "--healthcheck", "--max-age-seconds", "180"]
       interval: 30s

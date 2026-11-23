@@ -89,7 +89,12 @@ def snapshot(service: Any) -> dict[str, Any]:
             "closed_at_ms": close.get("at"), "close_reason": close.get("reason"),
             "realized_net": close.get("net_pnl"),
         })
+    forecasts = getattr(service, "market_forecasts", None)
+    estimates = forecasts.forecasts() if forecasts is not None else []
     return {"as_of_ms": now, "markets": cards, "signals": signals[:10], "events": events,
+        "forecasts": estimates, "forecast_error": forecasts.last_error if forecasts else None,
+        "forecast_performance": forecasts.performance() if forecasts else None,
+        "forecast_horizons": ["5m", "15m", "1h"],
         "candidates": candidates, "paper_journal": paper_journal,
         "paper_status": "NOT_EVALUABLE", "market_count": len(cards), "event_count": len(events),
         "semantics": "Наблюдение и экспериментальные гипотезы; рейтинг покрытия не является вероятностью прибыли."}
@@ -118,15 +123,31 @@ def create_dashboard_app(service: Any) -> web.Application:
         response.headers["Cache-Control"] = "no-store"
         return response
 
+    async def forecasts(request: web.Request) -> web.Response:
+        engine = getattr(service, "market_forecasts", None)
+        horizon = request.query.get("horizon", "15m")
+        if horizon not in ("5m", "15m", "1h"):
+            return web.json_response({"error": "Выберите горизонт 5m, 15m или 1h"}, status=400)
+        rows = engine.forecasts(horizon) if engine else []
+        identity = request.query.get("instrument")
+        if identity:
+            rows = [row for row in rows if row["instrument_id"] == identity]
+        response = web.json_response({"forecasts": rows, "horizon": horizon})
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
     app.router.add_get("/", index)
     app.router.add_get("/{name:app\\.css|app\\.js}", asset)
     app.router.add_get("/api/snapshot", api)
+    app.router.add_get("/api/forecasts", forecasts)
     return app
 
 
 async def start_dashboard(service: Any, settings: dict[str, Any]) -> web.AppRunner:
     host = str(settings.get("host", "127.0.0.1"))
-    if host not in ("127.0.0.1", "localhost", "::1"):
+    if host not in ("127.0.0.1", "localhost", "::1") and not (
+        host == "0.0.0.0" and settings.get("container_loopback_proxy") is True
+    ):
         raise ValueError("dashboard must bind to loopback only until authentication is configured")
     runner = web.AppRunner(create_dashboard_app(service), access_log=None, shutdown_timeout=5)
     await runner.setup()

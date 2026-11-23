@@ -27,14 +27,9 @@
 
 5. Graceful shutdown: `docker compose stop analyzer`. Do not kill the SQLite owner during migration or backup.
 
-## Telegram Mini App
+## Local website
 
-- The same analyzer process serves the read-only interface on the configured `mini_app.host` / `mini_app.port` (defaults: `0.0.0.0:8080` inside the container). Docker Compose exposes only `127.0.0.1:${MINI_APP_PORT:-8080}`; put an operator-managed HTTPS reverse proxy in front of that loopback listener.
-- Configure `TELEGRAM_MINI_APP_URL` as the actual owned HTTPS URL ending in `/app/`, and `TELEGRAM_MINI_APP_ALLOWED_USER_IDS` as comma-separated numeric Telegram user IDs. The bot token is the existing `TELEGRAM_BOT_TOKEN`; do not duplicate it into any Mini App setting.
-- Configure the real host/domain with Telegram/BotFather. In a private chat with the bot, `/app` sends a Telegram `web_app` launch button. An absent/invalid URL results in an explanatory message, not a guessed address.
-- `GET /api/v1/snapshot` requires the raw Telegram `initData` HMAC in `Authorization: tma …`, validates the signature, allowlist, and five-minute `auth_date`, and has `Cache-Control: no-store`. Never log `initData` or pass `initDataUnsafe` as identity.
-- Without bot token or a non-empty allowlist the API fails closed with HTTP 503. If the port/reverse proxy is unavailable, existing analysis workers continue; Mini App access is unavailable. Do not expose the container port directly to the Internet.
-- The app displays saved signals, event/on-chain records, paper state, provider health and explicit empty/degraded states. It has no execution, wallet or signing interface. The local browser preview is visual-only without Telegram authorization and does not fabricate market data.
+Run the daemon and open http://127.0.0.1:8081/. Telegram is notifications-only. Keep the listener private; see README section 3 for forecast semantics and limits.
 
 ## Stop conditions and response
 

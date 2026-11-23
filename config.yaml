@@ -10,18 +10,17 @@ service:
   log_max_bytes: 10000000
   log_backup_count: 5
 
-mini_app:
-  enabled: true
-  host: 127.0.0.1
-  port: 8080
-  public_url: null
-  allowed_user_ids: []
-  init_data_max_age_seconds: 300
-
 dashboard:
   enabled: true
   host: 127.0.0.1
   port: 8081
+
+market_forecast:
+  snapshot_cadence_seconds: 300
+  minimum_directional_percent: 60
+  fee_bps_per_side: 4
+  slippage_bps_per_side: 2
+  max_per_hour: 8
 
 market:
   assets: [SOL, HYPE]
@@ -125,9 +124,9 @@ market_analysis:
   intervals: [5m, 15m, 1h, 4h]
   poll_interval_seconds: 15
   instruments_per_cycle: 5
-  history_candles: 80
+  history_candles: 300
   minimum_history: 25
-  maximum_cached_candles: 10000
+  maximum_cached_candles: 40000
   maximum_requests_per_cycle: 30
   candle_stale_seconds: 1800
   book_stale_seconds: 60
@@ -162,11 +161,12 @@ universe:
   max_deep_watchlist: 30
   bucket_minimums:
     majors_l1: 2
-    derivatives_movers: 2
+    derivatives_movers: 60
     dex_memecoin_candidates: 0
-    liquid_spot_candidates: 20
+    liquid_spot_candidates: 40
   deep_bucket_minimums:
-    liquid_spot_candidates: 20
+    derivatives_movers: 18
+    liquid_spot_candidates: 8
   weights:
     liquidity: 0.20
     volume: 0.30
@@ -387,7 +387,7 @@ alerts:
   # Experimental spot alerts for selected deep-watch markets beyond SOL/HYPE.
   # The setup score is not a calibrated probability; messages include costs and TTL.
   multi_asset:
-    enabled: true
+    enabled: false
     max_per_hour: 4
     max_per_day: 20
   news:

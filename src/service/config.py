@@ -34,28 +34,9 @@ def load_config(path: str | Path) -> tuple[dict[str, Any], Path]:
     strict_env = os.getenv("STRICT_ALERT_MODE")
     if strict_env is not None:
         config["alerts"]["strict_alert_mode"] = strict_env.lower() in {"1", "true", "yes", "on"}
-    mini_app = config.setdefault("mini_app", {})
-    url_override = os.getenv("TELEGRAM_MINI_APP_URL")
-    if url_override is not None:
-        mini_app["public_url"] = url_override.strip() or None
-    user_ids_override = os.getenv("TELEGRAM_MINI_APP_ALLOWED_USER_IDS")
-    if user_ids_override is not None:
-        try:
-            ids = [int(value.strip()) for value in user_ids_override.split(",") if value.strip()]
-        except ValueError as exc:
-            raise ValueError("TELEGRAM_MINI_APP_ALLOWED_USER_IDS must be comma-separated positive integers") from exc
-        if any(value <= 0 for value in ids):
-            raise ValueError("TELEGRAM_MINI_APP_ALLOWED_USER_IDS must contain positive integers")
-        mini_app["allowed_user_ids"] = sorted(set(ids))
-    mini_app.setdefault("allowed_user_ids", [])
-    mini_app.setdefault("init_data_max_age_seconds", 300)
-    mini_app["host"] = os.getenv("ANALYZER_MINI_APP_HOST", mini_app.get("host", "0.0.0.0"))
-    try:
-        mini_app["port"] = int(os.getenv("ANALYZER_MINI_APP_PORT", mini_app.get("port", 8080)))
-    except (TypeError, ValueError) as exc:
-        raise ValueError("ANALYZER_MINI_APP_PORT must be an integer from 1 to 65535") from exc
-    if not 1 <= mini_app["port"] <= 65535:
-        raise ValueError("ANALYZER_MINI_APP_PORT must be an integer from 1 to 65535")
+    dashboard = config.setdefault("dashboard", {})
+    dashboard["host"] = os.getenv("ANALYZER_DASHBOARD_HOST", dashboard.get("host", "127.0.0.1"))
+    dashboard["container_loopback_proxy"] = os.getenv("ANALYZER_DASHBOARD_LOOPBACK_PROXY") == "1"
     validate_provider_config(config)
     validate_onchain_config(config)
     # Transitional aliases keep the proven SOL/HYPE analysis pipeline unchanged;

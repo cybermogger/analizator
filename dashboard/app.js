@@ -1,8 +1,17 @@
 const $ = (id) => document.getElementById(id);
 let markets = [];
+let forecasts = [];
+let forecastRequest = 0;
 const el = (tag, className, value) => { const node = document.createElement(tag); if (className) node.className = className; if (value != null) node.textContent = String(value); return node; };
 const age = (ms) => { if (!Number.isFinite(Number(ms))) return "—"; const delta = Math.max(0, Date.now() - Number(ms)); return delta < 60000 ? "только что" : delta < 3600000 ? `${Math.floor(delta / 60000)} мин назад` : `${Math.floor(delta / 3600000)} ч назад`; };
 const price = (value) => { const n = Number(value); if (!Number.isFinite(n) || n <= 0) return "—"; return n.toLocaleString("ru-RU", { maximumFractionDigits: n < .01 ? 8 : n < 1 ? 5 : 2 }); };
+const roundedProbabilities = p => {
+  const keys = ["LONG", "SHORT", "WAIT"];
+  const output = Object.fromEntries(keys.map(key => [key, Math.floor(p[key])]));
+  const order = [...keys].sort((a,b) => (p[b]-output[b])-(p[a]-output[a]));
+  for (let n=0; n<100-keys.reduce((sum,key)=>sum+Math.floor(p[key]),0); n++) output[order[n%3]]++;
+  return output;
+};
 function drawMarkets() {
   const query = $("market-search").value.trim().toUpperCase();
   const type = $("market-filter").value;
@@ -29,7 +38,7 @@ function drawEvents(events) {
     main.append(el("p", "", `${(event.assets || []).join(", ") || "Рынок в целом"} · ${(event.source_ids || []).join(", ") || "Источник не указан"}${event.contradiction_state && event.contradiction_state !== "none" ? ` · статус: ${event.contradiction_state}` : ""}`)); row.append(main);
     const meta = el("div", "event-meta", age(event.received_at_ms));
     const url = (event.evidence_urls || []).find(value => { try { const parsed = new URL(value); return parsed.protocol === "https:"; } catch { return false; } });
-    if (url) { const link = el("a", "", "Первоисточник ↗"); link.href = url; link.target = "_blank"; link.rel = "noopener noreferrer"; meta.append(link); }
+    if (url) { const link = el("a", "", "Первоисточник"); link.href = url; link.target = "_blank"; link.rel = "noopener noreferrer"; meta.append(link); }
     row.append(meta); list.append(row);
   }
 }
@@ -86,6 +95,8 @@ async function refresh() {
     $("updated").textContent = `Последнее обновление: ${new Date(data.as_of_ms).toLocaleTimeString("ru-RU")}`;
     $("connection").textContent = "СВЯЗЬ УСТАНОВЛЕНА"; $("connection").classList.remove("offline");
     $("system-status").textContent = "На связи"; $("system-note").textContent = markets.length ? "Данные доступны для просмотра" : "Ожидаем первый цикл анализа";
+    if ($("forecast-horizon").value === "15m") { forecasts = data.forecasts || []; drawForecasts(); }
+    else { await refreshForecasts(); }
     drawMarkets(); drawSignals(Array.isArray(data.signals) ? data.signals : []);
     drawPaperJournal(Array.isArray(data.paper_journal) ? data.paper_journal : []);
     drawEvents(Array.isArray(data.events) ? data.events : []);
@@ -93,6 +104,8 @@ async function refresh() {
   } catch {
     $("connection").textContent = "НЕТ СОЕДИНЕНИЯ"; $("connection").classList.add("offline");
     $("system-status").textContent = "Нет связи"; $("system-note").textContent = "Локальный анализатор недоступен";
+    forecasts = []; drawForecasts(); drawSignals([]);
+    $("forecast-status").textContent = "Нет связи: предыдущие прогнозы скрыты до восстановления данных.";
   }
 }
 $("market-search").addEventListener("input", drawMarkets);
@@ -100,3 +113,53 @@ $("market-filter").addEventListener("change", drawMarkets);
 setInterval(() => { $("clock").textContent = new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }); }, 1000);
 setInterval(refresh, 20000);
 refresh();
+
+function drawForecasts() {
+  const query = $("forecast-search").value.trim().toUpperCase();
+  const selected = $("forecast-instrument").value;
+  const select = $("forecast-instrument");
+  const available = forecasts.filter(f => !query || `${f.base} ${f.instrument_id}`.toUpperCase().includes(query));
+  select.replaceChildren(el("option", "", "Все инструменты")); select.firstChild.value = "";
+  for (const f of available) { const option = el("option", "", `${f.base}/${f.quote} · ${f.venue} · ${f.market_type}`); option.value = f.instrument_id; select.append(option); }
+  select.value = available.some(f => f.instrument_id === selected) ? selected : "";
+  const rows = available.filter(f => (!select.value || f.instrument_id === select.value) && f.horizon === $("forecast-horizon").value);
+  const list = $("forecast-list"); list.replaceChildren();
+  $("forecast-status").textContent = forecasts.length ? `${forecasts.length} инструментов · ${forecasts.filter(f => f.eligible).length} кандидатов. Сильные сетапы отправляются сразу; обзор — раз в час.` : "Сканер собирает историю. Проверьте подключение бирж и дождитесь первого цикла.";
+  if (!rows.length) { list.append(el("div", "empty", forecasts.length ? "Нет инструментов по запросу" : "Прогнозы ещё не готовы")); return; }
+  for (const f of rows) {
+    const actionable = f.eligible && Date.now() < Number(f.expires_at_ms);
+    const row = el("article", `forecast-card ${actionable ? 'candidate' : ''}`);
+    row.append(el("h3", "", `${f.base || f.instrument_id} · ${f.horizon}`), el("p", "", `${f.venue} · ${f.market_type} · ${f.quote}`));
+    const p = f.probabilities;
+    if (p) {
+      const display = roundedProbabilities(p);
+      const values = el("div", "probability-row");
+      const bar = el("div", "probability-bar");
+      for (const [key, cls] of [["LONG","long"],["SHORT","short"],["WAIT","wait"]]) {
+        values.append(el("strong", cls, `${key} ${display[key]}%`));
+        const part = el("span", cls); part.style.width = `${Math.max(0,Math.min(100,Number(p[key])))}%`; bar.append(part);
+      }
+      row.append(values,bar,el("p", "", `Эмпирическая оценка · ${f.sample_count} аналогов · не калибрована`));
+      if (f.entry_reference && f.direction !== 'WAIT') row.append(el("p", "", `Вход ${price(f.entry_reference)} · стоп ${price(f.stop)} · цель ${price(f.target)}`));
+    }
+    row.append(el("p", "", actionable ? `Кандидат ${f.direction}: условия фильтра выполнены. Преимущество ещё проверяется.` : `Нет сигнала: ${(f.reasons || []).join('; ') || 'ожидаем свежую котировку'}`));
+    row.append(el("p", "", `${f.instrument_id} · ${age(f.observed_at_ms)}`));
+    list.append(row);
+  }
+}
+async function refreshForecasts() {
+  const request = ++forecastRequest;
+  const horizon = $("forecast-horizon").value;
+  forecasts = []; drawForecasts();
+  $("forecast-status").textContent = "Обновляем оценки…";
+  try {
+    const response = await fetch(`/api/forecasts?horizon=${encodeURIComponent(horizon)}`, {cache:"no-store",signal:AbortSignal.timeout(8000)});
+    if (!response.ok) throw Error(response.status);
+    const data = await response.json();
+    if (request !== forecastRequest || horizon !== $("forecast-horizon").value) return;
+    forecasts = data.forecasts || []; drawForecasts();
+  } catch { if (request === forecastRequest) { forecasts = []; drawForecasts(); $("forecast-status").textContent = "Не удалось получить прогнозы. Проверьте соединение."; } }
+}
+$("forecast-search").addEventListener("input", drawForecasts);
+$("forecast-instrument").addEventListener("change", drawForecasts);
+$("forecast-horizon").addEventListener("change", refreshForecasts);

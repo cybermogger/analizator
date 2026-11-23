@@ -644,7 +644,8 @@ class SQLiteStorage:
         integrity = next(iter(result[0].values())) if result else "unknown"
         if foreign_key_errors:
             integrity = "foreign_key_error"
-        return {"path": str(self.path), "integrity": integrity, "schema_version": versions[0]["version"] if versions else None, "bytes": self.path.stat().st_size}
+        size = 0 if str(self.path) == ":memory:" else self.path.stat().st_size
+        return {"path": str(self.path), "integrity": integrity, "schema_version": versions[0]["version"] if versions else None, "bytes": size}
 
     @staticmethod
     def json(value: Any) -> str:

@@ -138,11 +138,22 @@ class StrategyShadow:
             decision_bar = anchor if anchor > 0 else now // 3_600_000 * 3_600_000
             pid = hashlib.sha256(f"shadow-v1|{variant}|{iid}|{decision_bar}".encode()).hexdigest()
             existing = self.storage.query("SELECT payload_json FROM strategy_shadow_plans WHERE plan_id=?", (pid,))
+            recovered = self.storage.query("""SELECT payload_json FROM strategy_shadow_plans
+                WHERE variant=? AND instrument_id=? AND json_extract(payload_json,'$.signal_anchor_ms')=?
+                AND json_extract(payload_json,'$.status')='PROPOSED' ORDER BY observed_at_ms DESC LIMIT 1""",
+                (variant, iid, anchor))
+            if recovered:
+                existing = recovered
+            retry_data_failure = False
             if existing:
                 saved = json.loads(existing[0]["payload_json"])
-                saved["reasons"] = tuple(saved["reasons"])
-                plans.append(ShadowPlan(**saved))
-                continue
+                temporary = {"exact-identity fresh BBO unavailable", "closed causal candle quality unavailable", "timeframe disagreement or missing interval", "risk size unavailable"}
+                retry_data_failure = saved["status"] == "NO_TRADE" and bool(set(saved["reasons"]) & temporary)
+                if not retry_data_failure:
+                    saved["reasons"] = tuple(saved["reasons"])
+                    plans.append(ShadowPlan(**saved))
+                    continue
+                pid = hashlib.sha256(f"{pid}|retry|{now}".encode()).hexdigest()
             reasons: list[str] = []
             directions = [candles.get(tf, {}).get("trend") for tf in intervals]
             trend = directions[0] if directions and directions[0] in ("UP", "DOWN") else None
@@ -174,7 +185,9 @@ class StrategyShadow:
             if notional <= 0: direction = "NO_TRADE"; reasons.append("risk size unavailable")
             if direction == "LONG" and self._has_active_plan(variant, iid, anchor, now):
                 direction = "NO_TRADE"; reasons.append("active plan, closed-bar rearm, or cooldown")
-            score = 0 if direction == "NO_TRADE" else min(100, 50 + 10 * len(intervals))
+            strengths = [abs(float(candles.get(tf, {}).get("momentum_4_bar_pct") or 0)) for tf in intervals]
+            relative = [float(candles.get(tf, {}).get("relative_volume") or 0) for tf in intervals]
+            score = 0 if direction == "NO_TRADE" else min(100, round(40 + 10*len(intervals) + min(15, sum(strengths)*3) + min(15, sum(relative)*2)))
             stop = mid * (1-stop_pct) if direction == "LONG" else None
             target = mid * (1+2*stop_pct) if direction == "LONG" else None
             plan = ShadowPlan(pid, variant, iid, direction, "PROPOSED" if direction != "NO_TRADE" else "NO_TRADE",

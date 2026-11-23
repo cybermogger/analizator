@@ -102,6 +102,12 @@ class AnalyzerService:
             fast_event_strength=alert_cfg.get("fast_event_strength", 70),
         )
         self.telegram = TelegramClient(os.getenv("TELEGRAM_BOT_TOKEN"), os.getenv("TELEGRAM_CHAT_ID"), config["service"]["request_timeout_seconds"])
+        from .market_forecast import MarketForecastService
+        self.market_forecasts = MarketForecastService(
+            self.market_analysis, self.storage, config.get("market_forecast", {}),
+            self._send_once if self.telegram.configured and alert_cfg.get("enabled", False) else None,
+        )
+        self.market_analysis.forecasts = self.market_forecasts
         self.multi_asset_alerts = MultiAssetAlertService(
             self.storage, alert_cfg.get("multi_asset", {}), self._send_once,
             excluded_bases=config["market"]["assets"],
@@ -318,8 +324,9 @@ class AnalyzerService:
             probability_map = {"LONG": float(percentages[0]), "SHORT": float(percentages[1]), "WAIT": float(percentages[2])}
             active_votes = [
                 "LONG" if component.probabilities[0] >= component.probabilities[1] else "SHORT"
-                for component in components.values()
-                if component.quality >= 0.2 and max(component.probabilities[:2]) > component.probabilities[2]
+                for name, component in components.items()
+                if result.weights.get(name, 0) > 0
+                and component.quality >= 0.2 and max(component.probabilities[:2]) > component.probabilities[2]
             ]
             contradiction_scale = 0.88 if "LONG" in active_votes and "SHORT" in active_votes else 1.0
             calibration_scale = self.forecast_performance.runtime_confidence_scale(coin, horizon)
@@ -340,7 +347,7 @@ class AnalyzerService:
                             "SHORT": component.probabilities[1] * 100,
                             "WAIT": component.probabilities[2] * 100,
                         },
-                        "quality": component.quality,
+                        "quality": component.quality, "effective_weight": result.weights.get(name, 0.0),
                     }
                     for name, component in components.items()
                 },
@@ -391,6 +398,11 @@ class AnalyzerService:
             "plan": plan, "plans": plans, "regime": str(regime), "reasons": list(dict.fromkeys(all_reasons))[:6],
             "derivatives": derivative_values, "orderbook": book_values, "tradeflow": trade_values,
             "btc_context": btc_values, "model_status": model_status, "details": horizon_details,
+            "ml_readiness": {
+                "accepted_model_loaded": artifact is not None,
+                "automatic_training_enabled": bool(self.config["models"].get("auto_retrain", {}).get("enabled", False)),
+                "reason": "accepted model loaded" if artifact is not None else "no accepted ML artifact; waiting alone does not train a model",
+            },
             "production_model_version": production_model_version,
             "decision_source": {
                 "interval": source_interval,

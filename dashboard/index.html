@@ -16,7 +16,7 @@
       <div class="rail-label">РАБОЧЕЕ ПРОСТРАНСТВО</div>
       <nav>
         <a class="nav-link active" href="#overview"><span class="nav-icon">◫</span> Обзор <span class="nav-num">01</span></a>
-        <a class="nav-link" href="#signals"><span class="nav-icon">↗</span> Сетапы <span class="nav-num">02</span></a>
+        <a class="nav-link" href="#forecast-panel"><span class="nav-icon">◈</span> Прогнозы <span class="nav-num">02</span></a>
         <a class="nav-link" href="#markets"><span class="nav-icon">◈</span> Рынки <span class="nav-num">03</span></a>
         <a class="nav-link" href="#events"><span class="nav-icon">✳</span> События <span class="nav-num">04</span></a>
         <a class="nav-link" href="#candidates"><span class="nav-icon">◎</span> Новые токены <span class="nav-num">05</span></a>
@@ -37,7 +37,13 @@
         <div class="metric"><span class="metric-label">СОБЫТИЯ В ЛЕНТЕ</span><strong id="event-count">—</strong><small>С проверяемыми источниками</small></div>
         <div class="metric accent"><span class="metric-label">СТАТУС СИСТЕМЫ</span><strong id="system-status">Ожидание</strong><small id="system-note">Подключение к локальному анализатору</small></div>
       </section>
-      <section id="signals" class="panel news-panel"><div class="panel-head"><div><div class="section-kicker">ЭКСПЕРИМЕНТ / СЕТАПЫ</div><h2>Активные сетапы</h2><p>Только свежие спотовые планы с входом, стопом, целью и сроком действия. Виртуальные гипотезы, без доказанной прибыльности.</p></div><span class="section-pill">ТОЛЬКО SPOT</span></div><div id="signal-list" class="event-list"><div class="empty">Ожидание свежих сетапов…</div></div></section>
+      <section id="forecast-panel" class="panel news-panel">
+        <div class="panel-head"><div><div class="section-kicker">ПРОГНОЗЫ / 5M · 15M · 1H</div><h2>Выбери свой рынок</h2><p>LONG / SHORT / WAIT для ликвидных инструментов. Эмпирические оценки не калиброваны; SHORT-сетапы доступны только на фьючерсах.</p></div></div>
+        <div class="forecast-controls"><label>Найти монету<input id="forecast-search" type="search" placeholder="BTC, ETH, SOL…" autocomplete="off"></label><label>Инструмент<select id="forecast-instrument" aria-label="Монета и площадка"><option value="">Все инструменты</option></select></label><label>Горизонт<select id="forecast-horizon"><option value="5m">5 минут</option><option value="15m" selected>15 минут</option><option value="1h">1 час</option></select></label></div>
+        <p id="forecast-status" role="status" aria-live="polite">Ожидаем первый цикл анализа…</p>
+        <div id="forecast-list" class="forecast-grid"></div>
+      </section>
+      <section id="signals" class="panel news-panel"><div class="panel-head"><div><div class="section-kicker">ЭКСПЕРИМЕНТ / СЕТАПЫ</div><h2>Виртуальные спотовые планы</h2><p>Только свежие спотовые планы с входом, стопом, целью и сроком действия. Виртуальные гипотезы, без доказанной прибыльности.</p></div><span class="section-pill">PAPER / SPOT</span></div><div id="signal-list" class="event-list"><div class="empty">Ожидание свежих сетапов…</div></div></section>
       <section id="paper-journal" class="panel news-panel"><div class="panel-head"><div><div class="section-kicker">PAPER TRADING / ЖУРНАЛ</div><h2>Что стало с сетапами</h2><p>Последние 20 экспериментальных спотовых планов. Открытие и закрытие виртуальны; результат после модельных издержек показан только для закрытых. Статистика ещё не доказывает прибыльность.</p></div><span class="section-pill">БЕЗ ОРДЕРОВ</span></div><div id="paper-list" class="event-list"><div class="empty">Ожидание виртуальных планов…</div></div></section>
       <section id="markets" class="panel market-panel">
         <div class="panel-head"><div><div class="section-kicker">01 / АНАЛИТИКА</div><h2>Карта рынков</h2><p>Наблюдения по отдельным инструментам. Рейтинг отражает полноту данных и согласованность трендов.</p></div><div class="market-tools"><label class="search-label"><span>⌕</span><input id="market-search" type="search" placeholder="Поиск монеты или пары" aria-label="Поиск монеты или пары"></label><select id="market-filter" aria-label="Тип рынка"><option value="all">Все рынки</option><option value="spot">Спот</option><option value="perp">Фьючерсы</option></select></div></div>

@@ -1,1 +1,1 @@
-"""Standalone local analyzer dashboard; separate from the Telegram Mini App."""
+"""Primary local website for the crypto analyzer."""

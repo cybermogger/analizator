@@ -10,7 +10,6 @@ Status: IMPLEMENTED AS A SPOT-ONLY VIRTUAL EXPERIMENT. Phase7 A/B/C remains acce
 - Fees/slippage/spread recorded once; unsupported quotes/types explicitly rejected. Perpetual funding incompleteness must remain visible and must prevent fully-net profitability claims. No fictional USD conversions, asset ticker merges or contract multiplier changes.
 - Bounded integration with normal analysis worker, Russian /trade_plan exact-id and /strategy_performance plus discoverability from existing commands. No daemon or Telegram delivery during validation.
 - Explicit sample/NO_TRADE/open/expired/unknown counts, cost completeness, realized/unrealized results, sampled drawdown/turnover/holding/MFE/MAE; NOT_EVALUABLE until suitable real forward evidence. Synthetic tests do not prove profitability.
-- Offline regression tests using synthetic temporary databases; dotenv and pytest cache disabled before imports. Each subprocess <=55s. Unit/integration batches and independent final review. Preserve all dirty Mini App/A/B/C changes; no commit.
 
 ## Source and evidence boundary
 

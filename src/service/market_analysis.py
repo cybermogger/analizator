@@ -72,6 +72,8 @@ class MultiAssetAnalysisService:
         )} | {"cost_policy_version": self.cost_policy_version}
         self.feature_config_hash = hashlib.sha256(json.dumps(hash_settings, sort_keys=True).encode()).hexdigest()
         self._candles: OrderedDict[tuple[str, str, int], NormalizedCandle] = OrderedDict()
+        self._candle_times: dict[tuple[str, str], set[int]] = {}
+        self._active_instrument_ids: set[str] | None = None
         self._fetch_status: dict[tuple[str, str], dict[str, Any]] = {}
         self._funding: dict[str, tuple[FundingSnapshot, int]] = {}
         self._open_interest: dict[str, tuple[OpenInterestSnapshot, int]] = {}
@@ -90,6 +92,7 @@ class MultiAssetAnalysisService:
         self._last_cycle_duration_seconds = 0.0
         self._last_cycle_error: str | None = None
         self._observations_saved = 0
+        self._saved_observation_buckets: dict[str, tuple[str, str, int]] = {}
         self._outcomes_completed = 0
         self._outcomes_unavailable = 0
 
@@ -115,7 +118,12 @@ class MultiAssetAnalysisService:
 
     def _prune_universe(self, instruments: Sequence[Instrument]) -> None:
         active_ids = {item.instrument_id for item in instruments}
+        if self._active_instrument_ids == active_ids:
+            return
+        self._active_instrument_ids = active_ids
         self._candles = OrderedDict((k, v) for k, v in self._candles.items() if k[0] in active_ids)
+        self._candle_times = {k: v for k, v in self._candle_times.items() if k[0] in active_ids}
+        self._saved_observation_buckets = {k: v for k, v in self._saved_observation_buckets.items() if k in active_ids}
         for mapping in (self._cards, self._funding, self._open_interest, self._instrument_errors):
             for instrument_id in tuple(mapping):
                 if instrument_id not in active_ids:
@@ -187,17 +195,20 @@ class MultiAssetAnalysisService:
             previous = self._candles.get(key)
             if previous is None or candle.metadata.received_at_ms >= previous.metadata.received_at_ms:
                 self._candles[key] = candle
+                self._candle_times.setdefault((instrument.instrument_id, interval), set()).add(candle.open_time_ms)
                 self._candles.move_to_end(key)
                 accepted += 1
         while len(self._candles) > self.cache_limit:
-            self._candles.popitem(last=False)
+            (iid, tf, stamp), _ = self._candles.popitem(last=False)
+            self._candle_times.get((iid, tf), set()).discard(stamp)
         return accepted, dropped, duration
 
+    def candle_history(self, instrument_id: str, interval: str) -> list[NormalizedCandle]:
+        return [value for stamp in sorted(self._candle_times.get((instrument_id, interval), ()))
+            if (value := self._candles.get((instrument_id, interval, stamp))) is not None]
+
     def _interval_metrics(self, instrument: Instrument, interval: str, now_ms: int) -> tuple[dict[str, Any], CandleQuality]:
-        rows = sorted(
-            (value for (iid, tf, _), value in self._candles.items() if iid == instrument.instrument_id and tf == interval),
-            key=lambda item: item.open_time_ms,
-        )
+        rows = self.candle_history(instrument.instrument_id, interval)
         if not rows:
             state = self._fetch_status.get((instrument.instrument_id, interval), {})
             fetch_state = state.get("status")
@@ -430,6 +441,9 @@ class MultiAssetAnalysisService:
         if self.repository is None or not hasattr(self.repository, "save_analysis_observation"):
             return False
         cadence_bucket = now_ms // self.observation_cadence_ms
+        cadence_key = (self.feature_version, self.feature_config_hash, cadence_bucket)
+        if self._saved_observation_buckets.get(instrument.instrument_id) == cadence_key:
+            return False
         bbo = self.market_data.truth_engine.latest_bbo(instrument.instrument_id)
         bbo_kind = bbo.metadata.exchange_time_kind if bbo else ""
         bbo_receive_fresh = bool(bbo and 0 < bbo.metadata.received_at_ms <= now_ms
@@ -595,7 +609,11 @@ class MultiAssetAnalysisService:
                 "observation_cadence_ms": self.observation_cadence_ms,
                 "outcome_max_latency_ms": self.outcome_max_latency_ms},
         }
-        return self.repository.save_analysis_observation(row)
+        inserted = self.repository.save_analysis_observation(row)
+        # The repository atomically freezes one row and all pending outcomes.
+        # Avoid rebuilding and committing the same immutable decision every poll.
+        self._saved_observation_buckets[instrument.instrument_id] = cadence_key
+        return inserted
 
     @staticmethod
     def _causal_feature_rejection(value: Mapping[str, Any] | None, cutoff_ms: int) -> str | None:
@@ -865,6 +883,15 @@ class MultiAssetAnalysisService:
                 if card is not None:
                     if self._save_observation(instrument, card, int(card["observed_at_ms"])):
                         self._observations_saved += 1
+                    forecasts = getattr(self, "forecasts", None)
+                    if forecasts is not None:
+                        try:
+                            await forecasts.process(card)
+                            forecasts.last_error = None
+                        except asyncio.CancelledError:
+                            raise
+                        except Exception as exc:
+                            forecasts.last_error = type(exc).__name__
                     strategy = getattr(self, "strategy_shadow", None)
                     if strategy is not None:
                         plans = strategy.evaluate(card)
@@ -966,6 +993,9 @@ class MultiAssetAnalysisService:
             "bid": bbo.bid, "ask": bbo.ask, "mid": bbo.mid, "spread_bps": bbo.spread_bps,
             "receive_age_seconds": bbo_age / 1000, "source_provider": bbo.metadata.provider,
             "source_venue": bbo.metadata.venue,
+            "received_at_ms": bbo.metadata.received_at_ms,
+            "exchange_timestamp_ms": bbo.metadata.exchange_timestamp_ms,
+            "exchange_time_kind": bbo.metadata.exchange_time_kind,
         } if bbo and bbo_age is not None and bbo_age <= self.book_stale_ms and not bbo_issue else None)
         if card["bbo"] is None:
             reasons.append("Fresh BBO unavailable.")
