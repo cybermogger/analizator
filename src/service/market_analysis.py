@@ -327,6 +327,10 @@ class MultiAssetAnalysisService:
         old = self._fetch_status.get(key, {})
         # Poll at a fraction of the interval; do not backfill all markets every loop.
         refresh_ms = min(max(60_000, INTERVAL_MS[interval] // 5), 900_000)
+        latest = self.candle_history(instrument.instrument_id, interval)
+        expected = now_ms // INTERVAL_MS[interval] * INTERVAL_MS[interval] - INTERVAL_MS[interval]
+        if interval == "5m" and latest and latest[-1].open_time_ms < expected:
+            refresh_ms = int(self.poll_seconds * 1000)
         if now_ms - int(old.get("attempted_at_ms", 0)) < refresh_ms:
             return
         state = {**old, "attempted_at_ms": now_ms, "status": "FETCHING", "reason": None}

@@ -62,8 +62,11 @@ class MarketForecastService:
             "semantics": "Эмпирическая оценка первого достижения ATR-барьера; не калиброванная вероятность прибыли.",
             "reasons": [], "sample_count": 0}
         quality = (card.get("candle_quality") or {}).get("5m", {})
-        if quality.get("status") != "FRESH" or quality.get("gaps"):
-            result["reasons"] = ["Нет непрерывной свежей истории закрытых 5m свечей"]
+        result["history_count"] = int(quality.get("count") or 0)
+        result["data_status"] = quality.get("status", "UNAVAILABLE")
+        result["data_reason"] = quality.get("reason")
+        if quality.get("status") not in {"FRESH", "FRESH_WITH_GAPS"}:
+            result["reasons"] = ["Обновляем закрытые 5m свечи" if quality.get("reason") == "latest_closed_candle_interval_is_old" else "Нет непрерывной свежей истории закрытых 5m свечей"]
             return result
         source = (self.analysis.candle_history(iid, "5m") if hasattr(self.analysis, "candle_history") else
             [bar for (identity, interval, _), bar in self.analysis._candles.items() if identity == iid and interval == "5m"])
@@ -77,6 +80,7 @@ class MarketForecastService:
         while start > 0 and bars[start].open_time_ms-bars[start-1].open_time_ms == 300_000:
             start -= 1
         bars = bars[start:]
+        result["history_count"] = len(bars)
         if len(bars) < 160:
             result["reasons"] = ["Недостаточно непрерывной истории после пропуска"]
             return result
@@ -112,6 +116,7 @@ class MarketForecastService:
             if len(self._cache) > 500:
                 self._cache.pop(next(iter(self._cache)))
         result.update(self._cache[key])
+        result["sparkline"] = [float(b.close) for b in bars[-36:]]
         p = result["probabilities"]
         direction = max(p, key=p.get)
         result.update(status="ESTIMATE", direction=direction)

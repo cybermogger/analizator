@@ -67,11 +67,24 @@ def test_stale_quote_keeps_estimate_but_blocks_alert(candles):
 
 def test_gaps_and_insufficient_history_do_not_fabricate_probabilities(candles):
     engine,card,now=setup_engine(candles)
-    card["candle_quality"]["5m"]["gaps"]=1
+    # A recent actual gap must block estimates; old gaps before a sufficiently
+    # long contiguous suffix must not discard otherwise usable history.
+    removed_key=list(engine.analysis._candles)[-50]
+    removed=engine.analysis._candles.pop(removed_key)
     assert engine.forecast(card,"5m",now)["probabilities"] is None
-    card["candle_quality"]["5m"]["gaps"]=0
+    engine.analysis._candles[removed_key]=removed
     engine.analysis._candles=dict(list(engine.analysis._candles.items())[-30:])
     assert engine.forecast(card,"5m",now)["probabilities"] is None
+    engine.storage.close()
+
+
+def test_old_gap_does_not_block_a_complete_recent_history(candles):
+    engine,card,now=setup_engine(candles)
+    card["candle_quality"]["5m"].update(status="FRESH_WITH_GAPS",gaps=1)
+    engine.analysis._candles.pop(list(engine.analysis._candles)[10])
+    result=engine.forecast(card,"5m",now)
+    assert result["probabilities"] is not None
+    assert result["history_count"]>=160 and len(result["sparkline"])==36
     engine.storage.close()
 
 
