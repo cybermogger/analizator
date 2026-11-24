@@ -20,6 +20,7 @@ from tests.test_multi_asset_analysis import make_instrument, make_market_data, M
 from tests.test_market_forecast import setup_engine
 from tests.test_catalog_discovery_alerts import catalog_entry, scope
 from src.providers.types import MarketCatalogScope
+from src.providers.universe import UniverseMembership, UniverseBucket
 
 
 @pytest.mark.asyncio
@@ -64,6 +65,24 @@ async def test_binance_unicode_symbol_does_not_poison_bulk_quote_request():
     result=await provider.refresh_bbo_batch([instrument])
     assert len(result)==1 and result[0].metadata.instrument_id==instrument.instrument_id
     await provider.close()
+
+
+def test_deep_analysis_slots_remain_stable_but_admission_and_quotas_win():
+    import time
+    service=object.__new__(MultiVenueMarketService)
+    service._deep_rebalance_at_ms=int(time.time()*1000)+300_000
+    service.universe=SimpleNamespace(max_deep=2,deep_bucket_minimums={UniverseBucket.DERIVATIVES_MOVERS:1})
+    def member(i,score,deep,bucket=UniverseBucket.LIQUID_SPOT_CANDIDATES):
+        return UniverseMembership(i,i,bucket,score,deep)
+    service.membership=(member('spot-A',.8,True),member('perp-A',.8,True,UniverseBucket.DERIVATIVES_MOVERS))
+    incoming=(member('spot-B',.85,True),member('spot-A',.79,False),member('perp-A',.79,True,UniverseBucket.DERIVATIVES_MOVERS))
+    result=service._stabilize_deep_watchlist(incoming)
+    assert {m.instrument_id for m in result if m.deep_watchlist}=={'spot-A','perp-A'}
+    result=service._stabilize_deep_watchlist(tuple(m for m in incoming if m.instrument_id!='spot-A'))
+    assert {m.instrument_id for m in result if m.deep_watchlist}=={'spot-B','perp-A'}
+    service._deep_rebalance_at_ms=0
+    result=service._stabilize_deep_watchlist(incoming)
+    assert {m.instrument_id for m in result if m.deep_watchlist}=={'spot-B','perp-A'}
 
 
 def test_temporary_membership_loss_preserves_history_but_hides_card():

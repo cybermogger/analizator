@@ -4,6 +4,7 @@ import asyncio
 import contextlib
 from collections.abc import Awaitable, Callable
 import time
+from dataclasses import replace
 from typing import Any, Sequence
 
 import structlog
@@ -384,6 +385,31 @@ class MultiVenueMarketService:
             for event in batch:
                 await self._capture(event)
 
+    def _stabilize_deep_watchlist(self, selected):
+        """Keep healthy analysis slots across small liquidity-rank changes.
+
+        Freshness/admission and scan ranking have already run. Bucket quotas
+        still take precedence, so new derivatives coverage can enter the set.
+        """
+        now = int(time.time()*1000)
+        if now >= getattr(self,'_deep_rebalance_at_ms',0):
+            self._deep_rebalance_at_ms = now+300_000
+            return selected
+        previous = {item.instrument_id for item in self.membership if item.deep_watchlist}
+        limit = self.universe.max_deep
+        deep = set()
+        for bucket, minimum in self.universe.deep_bucket_minimums.items():
+            available = [item for item in selected if item.bucket == bucket]
+            available.sort(key=lambda item: (item.instrument_id not in previous, not item.deep_watchlist, -item.score, item.instrument_id))
+            for item in available[:minimum]:
+                if len(deep) < limit:
+                    deep.add(item.instrument_id)
+        for item in sorted(selected,key=lambda item:(item.instrument_id not in previous, not item.deep_watchlist,-item.score,item.instrument_id)):
+            if len(deep) >= limit:
+                break
+            deep.add(item.instrument_id)
+        return tuple(replace(item,deep_watchlist=item.instrument_id in deep) for item in selected)
+
     async def refresh_once(self, *, include_deep: bool = False, refresh_catalog: bool = True) -> dict[str, Any]:
         errors = await self._refresh_catalogs(int(time.time() * 1000)) if refresh_catalog else {}
         now = int(time.time() * 1000)
@@ -505,7 +531,7 @@ class MultiVenueMarketService:
             for instrument in scan_instruments
         ]
         preselected_ids = set(dynamic_ids)
-        self.membership = self.universe.select(candidates)
+        self.membership = self._stabilize_deep_watchlist(self.universe.select(candidates))
         self.repository.save_universe_membership(self.membership, now)
 
         membership_by_id = {item.instrument_id: item for item in self.membership}
