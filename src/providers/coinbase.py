@@ -59,7 +59,7 @@ class CoinbaseProvider(ProviderRuntime, MarketDataProvider):
         received = now_ms()
         page_count = 0
         entries: list[MarketCatalogEntry] = []
-        seen: set[str] = set()
+        seen: dict[str, tuple[str, str]] = {}
         seen_cursors: set[str] = set()
         try:
             for page in range(max_pages):
@@ -73,6 +73,7 @@ class CoinbaseProvider(ProviderRuntime, MarketDataProvider):
                 page_count += 1
                 if not products:
                     raise ValueError("Coinbase returned an empty product page")
+                new_products = 0
                 for raw in products:
                     product = require_mapping(raw, "Coinbase product")
                     symbol = str(product.get("product_id", ""))
@@ -81,8 +82,13 @@ class CoinbaseProvider(ProviderRuntime, MarketDataProvider):
                     if not symbol or not base or not quote:
                         raise ValueError("Coinbase product page contains a row without stable identity fields")
                     if symbol in seen:
-                        raise ValueError("Coinbase product pagination contains duplicates")
-                    seen.add(symbol)
+                        if seen[symbol] != (base, quote):
+                            raise ValueError("Coinbase repeated product identity changed")
+                        # Volume sorting can move a product across adjacent
+                        # pages while downloading. Keep one exact identity.
+                        continue
+                    seen[symbol] = (base, quote)
+                    new_products += 1
                     is_spot = str(product.get("product_type", "SPOT")).upper() == "SPOT"
                     status_ok = is_spot and not any(bool(product.get(key, False)) for key in (
                         "is_disabled", "trading_disabled", "is_trading_disabled", "view_only"
@@ -114,6 +120,8 @@ class CoinbaseProvider(ProviderRuntime, MarketDataProvider):
                         instrument, scope, source, received, None, turnover, price,
                         active=status_ok, admitted=status_ok and turnover is not None, reasons=tuple(reasons),
                     ))
+                if not new_products:
+                    raise ValueError("Coinbase pagination returned no new products")
                 pagination = require_mapping(root.get("pagination"), "Coinbase pagination")
                 has_next = pagination.get("has_next")
                 if not isinstance(has_next, bool):

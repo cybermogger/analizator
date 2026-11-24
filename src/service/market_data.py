@@ -25,7 +25,8 @@ class _ProviderRequestGate:
     """Bound concurrent work and space request starts per provider."""
 
     def __init__(self, concurrency: int, minimum_interval_ms: int):
-        self._semaphore = asyncio.Semaphore(concurrency)
+        self._semaphore = asyncio.Semaphore(max(1, concurrency-1))
+        self._quote_semaphore = asyncio.Semaphore(1) if concurrency>1 else self._semaphore
         self._rate_lock = asyncio.Lock()
         self._minimum_interval = max(0, minimum_interval_ms) / 1000
         self._next_request_at = 0.0
@@ -37,11 +38,11 @@ class _ProviderRequestGate:
         self.rate_waits = 0
         self.rate_wait_ms = 0.0
 
-    async def run(self, operation: Callable[[], Awaitable[Any]]) -> Any:
+    async def run(self, operation: Callable[[], Awaitable[Any]], *, priority: bool = False) -> Any:
         self.waiting += 1
         counted_waiting = True
         try:
-            async with self._semaphore:
+            async with (self._quote_semaphore if priority else self._semaphore):
                 async with self._rate_lock:
                     now = time.monotonic()
                     delay = max(0.0, self._next_request_at - now)
@@ -102,6 +103,7 @@ class MultiVenueMarketService:
         self._catalog_state: dict[str, dict[str, Any]] = {}
         self._catalog_dirty_scopes: set[str] = set()
         self._last_catalog_refresh_ms = 0
+        self._catalog_next_attempt_ms: dict[str, int] = {}
         catalog = config.get("market_catalog", {})
         self._catalog_refresh_ms = max(60_000, int(float(catalog.get("refresh_interval_seconds", 900)) * 1000))
         self._catalog_max_age_ms = max(self._catalog_refresh_ms, int(float(catalog.get("max_age_seconds", 1800)) * 1000))
@@ -121,15 +123,16 @@ class MultiVenueMarketService:
         self._raw_retention_days = max(1, int(config.get("storage", {}).get("raw_retention_days", 7)))
         self._last_retention_at_ms = 0
         self._last_retention_pruned = 0
+        self._depth_cursor = 0
         self.repository.sync_provider_catalog(config["providers"], self.instruments, int(time.time() * 1000))
 
     async def _provider_request(
-        self, provider_id: str, operation: Callable[[], Awaitable[Any]]
+        self, provider_id: str, operation: Callable[[], Awaitable[Any]], *, priority: bool = False
     ) -> Any:
         gate = self._request_gates.get(provider_id)
         if gate is None:
             return await operation()
-        return await gate.run(operation)
+        return await gate.run(operation, priority=priority)
 
     async def _capture(self, event: NormalizedEvent) -> bool:
         accepted = self.truth_engine.ingest(event)
@@ -148,10 +151,13 @@ class MultiVenueMarketService:
     async def _refresh_catalogs(self, now_ms: int) -> dict[str, str]:
         if now_ms - self._last_catalog_refresh_ms < self._catalog_refresh_ms:
             return {}
+        force = self._last_catalog_refresh_ms == 0
         self._last_catalog_refresh_ms = now_ms
-        providers = [provider for provider in self.providers.enabled() if self._supports_catalog(provider)]
+        providers = [provider for provider in self.providers.enabled() if self._supports_catalog(provider)
+            and (force or now_ms >= self._catalog_next_attempt_ms.get(provider.provider_id, 0))]
         results = await asyncio.gather(*(
-            self._provider_request(provider.provider_id, provider.discover_catalog)
+            asyncio.wait_for(self._provider_request(provider.provider_id, provider.discover_catalog),
+                timeout=max(5.0,min(60.0,float(self.config.get('market_catalog',{}).get('request_timeout_seconds',30)))))
             for provider in providers
         ), return_exceptions=True)
         # Catalog receive times are captured after HTTP responses. Evaluate freshness
@@ -162,6 +168,8 @@ class MultiVenueMarketService:
         accepted_scopes: list[MarketCatalogScope] = []
         changed = False
         for provider, result in zip(providers, results, strict=True):
+            complete = not isinstance(result, BaseException) and all(scope.complete and scope.entries for scope in result)
+            self._catalog_next_attempt_ms[provider.provider_id] = now_ms + (self._catalog_refresh_ms if complete else 60_000)
             if isinstance(result, BaseException):
                 message = f"{type(result).__name__}: {result}"[:300]
                 errors[provider.provider_id] = message
@@ -247,6 +255,10 @@ class MultiVenueMarketService:
             self.repository.sync_provider_catalog(self.config["providers"], self.instruments, now_ms)
         if decision_rows:
             self.repository.save_market_discovery_decisions(decision_rows)
+        if self._catalog_next_attempt_ms:
+            # Retry only failed venues after one minute. A slow venue must
+            # neither freeze nor repeatedly reload successful catalogs.
+            self._last_catalog_refresh_ms = min(self._catalog_next_attempt_ms.values()) - self._catalog_refresh_ms
         on_catalog_scope = getattr(self, "on_catalog_scope", None)
         if on_catalog_scope is not None:
             for snapshot in accepted_scopes:
@@ -272,7 +284,7 @@ class MultiVenueMarketService:
         provider = self.providers.get(instrument.provider)
         try:
             result = await self._provider_request(
-                instrument.provider, lambda: provider.fetch_bbo(instrument)
+                instrument.provider, lambda: provider.fetch_bbo(instrument), priority=True
             )
             return instrument, result
         except Exception as exc:
@@ -341,6 +353,10 @@ class MultiVenueMarketService:
 
     async def _refresh_deep(self, membership: Sequence[UniverseMembership]) -> None:
         deep = [self.instruments.get(item.instrument_id) for item in membership if item.deep_watchlist]
+        if deep:
+            start = self._depth_cursor % len(deep)
+            deep = (deep[start:] + deep[:start])[:5]
+            self._depth_cursor = start + len(deep)
 
         async def fetch(instrument: Instrument) -> list[NormalizedEvent]:
             provider = self.providers.get(instrument.provider)
@@ -368,8 +384,8 @@ class MultiVenueMarketService:
             for event in batch:
                 await self._capture(event)
 
-    async def refresh_once(self, *, include_deep: bool = False) -> dict[str, Any]:
-        errors = await self._refresh_catalogs(int(time.time() * 1000))
+    async def refresh_once(self, *, include_deep: bool = False, refresh_catalog: bool = True) -> dict[str, Any]:
+        errors = await self._refresh_catalogs(int(time.time() * 1000)) if refresh_catalog else {}
         now = int(time.time() * 1000)
         catalog_providers = {
             provider.provider_id for provider in self.providers.enabled() if self._supports_catalog(provider)
@@ -432,12 +448,12 @@ class MultiVenueMarketService:
         grouped: dict[str, list[Instrument]] = {}
         for instrument in scan_instruments:
             grouped.setdefault(instrument.provider, []).append(instrument)
-        for provider_id, requested in grouped.items():
+        async def capture_group(provider_id, requested):
             try:
                 provider = self.providers.get(provider_id)
                 if getattr(provider, "bbo_batch_mode", "per_instrument") == "bulk":
                     batch = getattr(provider, "refresh_bbo_batch")
-                    result = await self._provider_request(provider_id, lambda: batch(requested))
+                    result = await self._provider_request(provider_id, lambda: batch(requested), priority=True)
                     for event in result:
                         if isinstance(event, NormalizedBBO):
                             await self._capture(event)
@@ -461,6 +477,13 @@ class MultiVenueMarketService:
                 message = f"{type(exc).__name__}: {exc}"[:300]
                 for instrument in requested:
                     errors[instrument.instrument_id] = message
+
+        async def bounded_group(provider_id, requested):
+            try:
+                await asyncio.wait_for(capture_group(provider_id, requested), timeout=10.0)
+            except TimeoutError:
+                errors[provider_id] = "BBO group time budget exceeded"
+        await asyncio.gather(*(bounded_group(provider_id, requested) for provider_id, requested in grouped.items()))
 
         # BBO freshness and decision timestamps must be measured after venue calls.
         now = int(time.time() * 1000)
@@ -659,20 +682,36 @@ class MultiVenueMarketService:
     async def run_forever(self) -> None:
         interval = max(2.0, float(self.config["market_truth"].get("poll_interval_seconds", 5)))
         deep_every = max(interval, float(self.config["market_truth"].get("deep_refresh_seconds", 15)))
-        last_deep = 0.0
-        while not self._stop.is_set():
-            started = time.monotonic()
-            try:
-                include_deep = started - last_deep >= deep_every
-                await self.refresh_once(include_deep=include_deep)
-                if include_deep:
-                    last_deep = started
-            except asyncio.CancelledError:
-                raise
-            except Exception as exc:
-                self.log.warning("multi_venue_refresh_failed", error=f"{type(exc).__name__}: {exc}")
-            with contextlib.suppress(asyncio.TimeoutError):
-                await asyncio.wait_for(self._stop.wait(), timeout=max(0.1, interval - (time.monotonic() - started)))
+        async def background(operation, every):
+            while not self._stop.is_set():
+                try:
+                    await operation()
+                except asyncio.CancelledError:
+                    raise
+                except Exception as exc:
+                    self.log.warning("market_background_failed", error=type(exc).__name__)
+                with contextlib.suppress(asyncio.TimeoutError):
+                    await asyncio.wait_for(self._stop.wait(), timeout=every)
+
+        tasks = [
+            asyncio.create_task(background(lambda: self._refresh_catalogs(int(time.time()*1000)), 5), name="market-catalog"),
+            asyncio.create_task(background(lambda: self._refresh_deep(tuple(self.membership)), deep_every), name="market-depth"),
+        ]
+        try:
+            while not self._stop.is_set():
+                started = time.monotonic()
+                try:
+                    await self.refresh_once(refresh_catalog=False)
+                except asyncio.CancelledError:
+                    raise
+                except Exception as exc:
+                    self.log.warning("multi_venue_refresh_failed", error=type(exc).__name__)
+                with contextlib.suppress(asyncio.TimeoutError):
+                    await asyncio.wait_for(self._stop.wait(), timeout=max(0.1, interval - (time.monotonic() - started)))
+        finally:
+            for task in tasks:
+                task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
 
     async def stop(self) -> None:
         self._stop.set()

@@ -121,8 +121,17 @@ class MultiAssetAnalysisService:
         if self._active_instrument_ids == active_ids:
             return
         self._active_instrument_ids = active_ids
-        self._candles = OrderedDict((k, v) for k, v in self._candles.items() if k[0] in active_ids)
-        self._candle_times = {k: v for k, v in self._candle_times.items() if k[0] in active_ids}
+        # Membership can disappear for one quote timeout. Preserve bounded
+        # candle history for still-listed instruments, but hide their cards.
+        retained_ids = set()
+        for iid in {key[0] for key in self._candles}:
+            try:
+                if self.market_data.instruments.get(iid).active:
+                    retained_ids.add(iid)
+            except KeyError:
+                pass
+        self._candles = OrderedDict((k, v) for k, v in self._candles.items() if k[0] in retained_ids)
+        self._candle_times = {k: v for k, v in self._candle_times.items() if k[0] in retained_ids}
         self._saved_observation_buckets = {k: v for k, v in self._saved_observation_buckets.items() if k in active_ids}
         for mapping in (self._cards, self._funding, self._open_interest, self._instrument_errors):
             for instrument_id in tuple(mapping):
@@ -812,9 +821,22 @@ class MultiAssetAnalysisService:
         now = self._now_ms()
         instruments = self._eligible_members()
         self._prune_universe(instruments)
+        # At a five-minute boundary, update existing forecast histories before
+        # slower 1h/4h/funding rotation. Preserve room for one normal analysis.
+        expected_open = (now // 300_000) * 300_000 - 300_000
+        urgent = []
+        if '5m' in self.intervals:
+            for instrument in instruments:
+                stamps = self._candle_times.get((instrument.instrument_id, '5m'), ())
+                if stamps and max(stamps) < expected_open:
+                    urgent.append(instrument)
+        urgent.sort(key=lambda instrument: (max(self._candle_times[(instrument.instrument_id,'5m')]),instrument.instrument_id))
+        urgent = urgent[:min(6,max(0,self.max_requests_per_cycle-self._requests-len(self.intervals)))]
+        if urgent:
+            await asyncio.gather(*(self._refresh_interval(instrument,'5m',now) for instrument in urgent))
         if instruments:
             start = self._cursor % len(instruments)
-            per_instrument_budget = max(1, self.max_requests_per_cycle // len(self.intervals))
+            per_instrument_budget = max(0, (self.max_requests_per_cycle-self._requests) // len(self.intervals))
             cycle_rotation_size = min(self.rotation_size, per_instrument_budget)
             rotated = (instruments[start:] + instruments[:start])[:cycle_rotation_size]
             self._cursor = (start + len(rotated)) % len(instruments)

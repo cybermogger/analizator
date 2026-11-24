@@ -12,11 +12,29 @@ const roundedProbabilities = p => {
   for (let n=0; n<100-keys.reduce((sum,key)=>sum+Math.floor(p[key]),0); n++) output[order[n%3]]++;
   return output;
 };
+function tradePlan(f) {
+  const plan=f.trade_plan;
+  if(!plan)return null;
+  const box=el('div','trade-plan');
+  box.dataset.expires=String(plan.expires_at_ms);
+  const valid=Date.now()<plan.expires_at_ms;
+  box.append(el('strong','',`${plan.status==='SIGNAL' && valid?'План сигнала':'Условный план'} · ${plan.direction==='LONG'?'ЛОНГ':'ШОРТ'}`));
+  const levels=el('dl','plan-levels');
+  for(const [label,value] of [['Вход',plan.entry],['Стоп-лосс',plan.stop_loss],['Тейк-профит',plan.take_profit]]){
+    const cell=el('div');cell.append(el('dt','',label),el('dd','',price(value)));levels.append(cell);
+  }
+  box.append(levels,el('p','',`${plan.quote} · риск ${plan.stop_distance_percent.toFixed(2)}% · цель +${plan.target_distance_percent.toFixed(2)}% · прибыль/риск ${plan.reward_risk.toFixed(2)}`));
+  box.append(el('p','',`С учётом расходов: ${plan.reward_risk_after_costs.toFixed(2)} · расходы ≈ ${plan.estimated_roundtrip_cost_percent.toFixed(2)}%`));
+  box.append(el('p',`plan-expiry ${valid?'':'warning'}`,valid?`Вход до ${new Date(plan.expires_at_ms).toLocaleTimeString('ru-RU')} · горизонт ${f.horizon}`:'Котировка устарела — дождитесь обновления входа.'));
+  if(plan.status!=='SIGNAL')box.append(el('small','','Условия входа не выполнены. Уровни показаны для сценария, торгового сигнала нет.'));
+  return box;
+}
 function drawMarkets() {
   const query = $("market-search").value.trim().toUpperCase();
   const type = $("market-filter").value;
   const rows = $("market-rows"); rows.replaceChildren();
-  const filtered = markets.filter(m => (!query || `${m.base} ${m.instrument_id}`.toUpperCase().includes(query)) && (type === "all" || (type === "perp" ? m.market_type !== "spot" : m.market_type === "spot")));
+  let filtered = markets.filter(m => (!query || `${m.base} ${m.instrument_id}`.toUpperCase().includes(query)) && (type === "all" || (type === "perp" ? m.market_type !== "spot" : m.market_type === "spot")));
+  const coinRows=new Map(); for(const item of filtered){ const saved=coinRows.get(item.base); if(!saved || item.instrument_id===preferredMarkets.get(item.base) || item.quote==='USDT' && saved.quote!=='USDT')coinRows.set(item.base,item); } filtered=[...coinRows.values()];
   if (!filtered.length) { const tr = el("tr"); const td = el("td", "empty", markets.length ? "По запросу ничего не найдено" : "Пока нет проверенных рыночных наблюдений"); td.colSpan = 5; tr.append(td); rows.append(tr); return; }
   for (const m of filtered) {
     const tr = el("tr"); const instrument = el("td"); instrument.append(el("span", "asset-name", m.base || "—"), el("span", "asset-sub", `${m.venue || "—"} · ${m.quote || "—"} · ${m.market_type || "—"}`)); tr.append(instrument);
@@ -33,9 +51,11 @@ function drawEvents(events) {
   if (!events.length) { list.append(el("div", "empty", "Пока нет проверенных событий в ленте")); return; }
   for (const event of events) {
     const row = el("article", `event ${event.contradiction_state === "retracted" ? "retracted" : ""}`);
-    row.append(el("div", "event-type", event.event_type || "СОБЫТИЕ"));
-    const main = el("div", "event-main"); main.append(el("strong", "", event.summary || "Описание недоступно"));
+    row.append(el("div", "event-type", ({LISTING:'Листинг',DELISTING:'Делистинг',PROTOCOL_UPGRADE:'Обновление сети',HACK_EXPLOIT:'Инцидент безопасности',REGULATORY:'Регулирование',ETF:'ETF',MACRO:'Макроэкономика',PARTNERSHIP:'Партнёрство',OUTAGE:'Сбой',TOKEN_UNLOCK:'Разблокировка',BURN:'Сжигание',GOVERNANCE:'Управление'}[event.event_type] || 'Событие рынка')));
+    const main = el("div", "event-main"); main.append(el("strong", "", event.summary_ru || "Перевод готовится…"));
     main.append(el("p", "", `${(event.assets || []).join(", ") || "Рынок в целом"} · ${(event.source_ids || []).join(", ") || "Источник не указан"}${event.contradiction_state && event.contradiction_state !== "none" ? ` · статус: ${event.contradiction_state}` : ""}`)); row.append(main);
+    main.append(el('div','translation-label',event.translation_status==='ORIGINAL_RU'?'Оригинал на русском':event.summary_ru?'Машинный перевод · EN → RU':'Русский перевод пока недоступен'));
+    const original=el('details','event-original');original.append(el('summary','','Оригинал'),el('p','',event.summary || ''));main.append(original);
     const meta = el("div", "event-meta", age(event.received_at_ms));
     const url = (event.evidence_urls || []).find(value => { try { const parsed = new URL(value); return parsed.protocol === "https:"; } catch { return false; } });
     if (url) { const link = el("a", "", "Первоисточник"); link.href = url; link.target = "_blank"; link.rel = "noopener noreferrer"; meta.append(link); }
@@ -90,13 +110,14 @@ async function refresh() {
     if (!response.ok) throw Error(`HTTP ${response.status}`);
     const data = await response.json();
     markets = Array.isArray(data.markets) ? data.markets : [];
-    $("market-count").textContent = String(markets.length);
+    $("market-count").textContent = String(new Set(markets.map(m=>m.base)).size);
     $("event-count").textContent = String(data.event_count ?? 0);
     $("updated").textContent = `Последнее обновление: ${new Date(data.as_of_ms).toLocaleTimeString("ru-RU")}`;
     $("connection").textContent = "СВЯЗЬ УСТАНОВЛЕНА"; $("connection").classList.remove("offline");
     $("system-status").textContent = "На связи"; $("system-note").textContent = markets.length ? "Данные доступны для просмотра" : "Ожидаем первый цикл анализа";
     if ($("forecast-horizon").value === "15m") { forecasts = data.forecasts || []; drawForecasts(); }
     else { await refreshForecasts(); }
+    if (workspaceTab === "best") await refreshBest();
     drawMarkets(); drawSignals(Array.isArray(data.signals) ? data.signals : []);
     drawPaperJournal(Array.isArray(data.paper_journal) ? data.paper_journal : []);
     drawEvents(Array.isArray(data.events) ? data.events : []);
@@ -105,16 +126,27 @@ async function refresh() {
     $("connection").textContent = "НЕТ СОЕДИНЕНИЯ"; $("connection").classList.add("offline");
     $("system-status").textContent = "Нет связи"; $("system-note").textContent = "Локальный анализатор недоступен";
     forecasts = []; drawForecasts(); drawSignals([]);
+    $('best-content').replaceChildren(el('div','empty','Нет связи. Предыдущий сигнал скрыт до восстановления свежих данных.'));
     $("forecast-status").textContent = "Нет связи: предыдущие прогнозы скрыты до восстановления данных.";
   }
 }
 $("market-search").addEventListener("input", drawMarkets);
 $("market-filter").addEventListener("change", drawMarkets);
 setInterval(() => { $("clock").textContent = new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }); }, 1000);
+setInterval(()=>document.querySelectorAll('.trade-plan[data-expires]').forEach(box=>{
+  if(Date.now()>=Number(box.dataset.expires)){
+    const label=box.querySelector('.plan-expiry');label.textContent='Котировка устарела — дождитесь обновления входа.';label.classList.add('warning');
+    box.classList.add('plan-expired');
+  }
+}),1000);
 setInterval(refresh, 20000);
 refresh();
 
 let marketView = 'all';
+const preferredMarkets = new Map();
+let workspaceTab='market';
+let lastBestKey='';
+let bestRequest=0;
 const seenCards = new Set();
 let favorites;
 try { favorites = new Set(JSON.parse(localStorage.getItem('analizator.favorites') || '[]')); } catch { favorites = new Set(); }
@@ -147,6 +179,14 @@ function drawForecasts() {
   const isReady = f => f.eligible && Date.now() < Number(f.expires_at_ms);
   let rows = matching.filter(f=>(!select.value || f.instrument_id===select.value) && f.horizon===$('forecast-horizon').value &&
     (marketView==='all' || marketView===f.market_type || marketView==='favorites' && favorites.has(f.instrument_id) || marketView==='ready' && isReady(f)));
+  if (!select.value) {
+    const groups=new Map();
+    for (const f of rows) { const key=String(f.base).toUpperCase(); if (!groups.has(key)) groups.set(key,[]); groups.get(key).push(f); }
+    rows=[...groups.values()].map(items=>{
+      items.sort((a,b)=>(Number(Boolean(b.probabilities))-Number(Boolean(a.probabilities))) || (Number(b.market_type==='perpetual')-Number(a.market_type==='perpetual')) || (Number(b.quote==='USDT')-Number(a.quote==='USDT')) || a.instrument_id.localeCompare(b.instrument_id));
+      return items.find(f=>f.instrument_id===preferredMarkets.get(items[0].base)) || items[0];
+    });
+  }
   if ($('forecast-sort').value==='name') rows.sort((a,b)=>String(a.base).localeCompare(String(b.base)));
   const list=$('forecast-list');
   const expanded = new Set([...list.querySelectorAll('details[open]')].map(x=>x.dataset.identity));
@@ -162,6 +202,12 @@ function drawForecasts() {
     const star=el('button','favorite',favorites.has(f.instrument_id)?'★':'☆'); star.type='button'; star.setAttribute('aria-label',`${favorites.has(f.instrument_id)?'Убрать из':'Добавить в'} избранное ${f.base}`); star.setAttribute('aria-pressed',String(favorites.has(f.instrument_id)));
     star.addEventListener('click',()=>{ favorites.has(f.instrument_id)?favorites.delete(f.instrument_id):favorites.add(f.instrument_id); try { localStorage.setItem('analizator.favorites',JSON.stringify([...favorites])); } catch {} drawForecasts(); });
     head.append(name,star); row.append(head,el('p','venue-line',`${venueName(f.venue)} · ${f.market_type==='spot'?'Спот':'Фьючерсы'} · ${f.quote} · ${f.horizon}`));
+    const alternatives=matching.filter(item=>item.base===f.base && (marketView==='all' || marketView==='favorites' || marketView==='ready' || item.market_type===marketView));
+    if (alternatives.length>1 && !select.value) {
+      const picker=el('select','venue-picker'); picker.setAttribute('aria-label',`Выбрать рынок ${f.base}`);
+      for (const item of alternatives) { const option=el('option','',`${venueName(item.venue)} · ${item.market_type==='spot'?'Спот':'Фьючерсы'} · ${item.quote}`);option.value=item.instrument_id;picker.append(option); }
+      picker.value=f.instrument_id;picker.addEventListener('change',()=>{preferredMarkets.set(f.base,picker.value);drawForecasts();});row.append(picker);
+    }
     const chart=sparkline(f.sparkline); if (chart) row.append(chart);
     if (f.probabilities) {
       const display=roundedProbabilities(f.probabilities), values=el('div','probability-row'), bar=el('div','probability-bar');
@@ -174,7 +220,7 @@ function drawForecasts() {
       const progress=el('progress','history-progress'); progress.max=160; progress.value=Math.min(160,f.history_count||0); progress.setAttribute('aria-label','Готовность истории'); row.append(progress);
     }
     const badge=el('div','scenario'); badge.append(el('span','scenario-dot'),el('strong','',state[1])); row.append(badge,el('p','scenario-summary',state[2]));
-    if (actionable) row.append(el('p','trade-levels',`Вход ${price(f.entry_reference)} · стоп ${price(f.stop)} · цель ${price(f.target)}`));
+    const plan=tradePlan(f);if(plan)row.append(plan);
     const details=el('details','forecast-details'); details.dataset.identity=key; details.open=expanded.has(key);
     details.append(el('summary','','Разбор оценки'));
     const reasons=el('ul'); for (const reason of f.reasons || []) reasons.append(el('li','',reason)); details.append(reasons);
@@ -215,3 +261,40 @@ if ('IntersectionObserver' in window) {
   }),{rootMargin:'-15% 0px -65% 0px'});
   document.querySelectorAll('main[id],section[id]').forEach(section=>observer.observe(section));
 }
+
+async function refreshBest() {
+  const host=$('best-content'),request=++bestRequest;
+  try {
+    const response=await fetch('/api/best',{cache:'no-store',signal:AbortSignal.timeout(12000)});
+    if(!response.ok) throw Error(response.status);
+    const data=await response.json();if(request!==bestRequest)return;host.replaceChildren();
+    if(!data.leader){host.append(el('div','empty','Нет свежих оценок. Лидер появится после обновления котировок.'));return;}
+    const f=data.leader, side=f.leading_side==='LONG'?'ЛОНГ':'ШОРТ';
+    const key=f.instrument_id+'|'+f.horizon+'|'+f.leading_side;
+    const box=el('article','best-leader'+(lastBestKey && key!==lastBestKey?' best-updated':''));
+    const title=el('div','best-title');title.append(el('h2','',f.base+' · '+side),el('span','',f.horizon+' · '+venueName(f.venue)+' · '+f.quote));box.append(title,el('div','best-number',Number(f.leading_percent).toFixed(1)+'%'));
+    box.append(el('p','',`LONG ${f.probabilities.LONG.toFixed(1)}% · SHORT ${f.probabilities.SHORT.toFixed(1)}% · WAIT ${f.probabilities.WAIT.toFixed(1)}%`));
+    box.append(el('p',f.eligible?'':'warning',f.eligible && Date.now()<Number(f.expires_at_ms)?'Условия входа выполнены · экспериментальный кандидат':'Лидер по проценту, но вход не подтверждён: '+(f.reasons || []).join('; ')));
+    const plan=tradePlan(f);if(plan)box.append(plan);
+    const chart=sparkline(f.sparkline);if(chart)box.append(chart);
+    box.append(el('p','',key!==lastBestKey&&lastBestKey?'Появился новый лидер.':'Лидер пересчитывается при каждом обновлении данных.'));host.append(box);lastBestKey=key;
+    const peers=el('div','best-comparison');
+    for(const runner of data.runners_up){
+      const card=el('div','best-runner');
+      card.append(el('strong','',`${runner.base} · ${runner.leading_side} ${runner.leading_percent.toFixed(1)}%`),el('span','',`${runner.horizon} · ${venueName(runner.venue)} · ${runner.quote}`));
+      const plan=tradePlan(runner);
+      if(plan){const details=el('details');details.append(el('summary','','Уровни и условия'),plan);for(const reason of runner.reasons || [])details.append(el('p','',reason));card.append(details);}
+      peers.append(card);
+    }
+    host.append(peers,el('p','',data.semantics));
+  }catch{host.replaceChildren(el('div','empty','Не удалось обновить лидера. Предыдущая оценка скрыта.'));}
+}
+async function refreshX(){
+  try{const response=await fetch('/api/x-status',{cache:'no-store',signal:AbortSignal.timeout(8000)});if(!response.ok)throw Error(response.status);const data=await response.json();
+    $('x-state').textContent=(data.status==='healthy'?'X API подключён. ':'X API не подключён: требуется доступ и Bearer Token. ')+data.note;
+    const host=$('x-accounts');host.replaceChildren();for(const account of data.accounts){const link=el('a','x-account','@'+account.handle);link.href=account.profile_url;link.target='_blank';link.rel='noopener noreferrer';link.append(el('small','',account.category));host.append(link);}
+  }catch{$('x-state').textContent='Не удалось проверить подключение X.';}
+}
+function changeWorkspace(value){workspaceTab=value;document.querySelectorAll('[data-tab]').forEach(button=>button.setAttribute('aria-selected',String(button.dataset.tab===value)));document.querySelectorAll('main > section').forEach(section=>{section.hidden=value==='market'?['best-panel','x-panel'].includes(section.id):section.id!==(value==='best'?'best-panel':'x-panel');});if(value==='best')refreshBest();if(value==='x')refreshX();}
+document.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>changeWorkspace(button.dataset.tab)));
+document.querySelectorAll('.nav-link').forEach(link=>link.addEventListener('click',()=>changeWorkspace('market')));

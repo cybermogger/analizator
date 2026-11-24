@@ -38,12 +38,22 @@ class PublicHTTPClient:
         session = await self._ensure_session()
         url = f"{self.base_url}/{path.lstrip('/')}"
         try:
-            async with session.get(url, params=dict(params or {})) as response:
-                if response.status != 200:
-                    text = await response.text()
-                    raise ProviderError(f"GET {url} returned HTTP {response.status}: {text[:300]}")
-                payload = await response.json(content_type=None)
-                return payload, int(time.time() * 1000)
+            async with asyncio.timeout(self.timeout_seconds):
+                for attempt in range(2):
+                    try:
+                        timeout = aiohttp.ClientTimeout(total=self.timeout_seconds/2,
+                            connect=min(3.0,self.timeout_seconds/2))
+                        async with session.get(url, params=dict(params or {}), timeout=timeout) as response:
+                            if response.status != 200:
+                                text = await response.text()
+                                raise ProviderError(f"GET {url} returned HTTP {response.status}: {text[:300]}")
+                            payload = await response.json(content_type=None)
+                            return payload, int(time.time() * 1000)
+                    except (aiohttp.ClientError, asyncio.TimeoutError):
+                        # Only idempotent public GET transport failures retry.
+                        # HTTP errors (including 429/418) are never retried here.
+                        if attempt:
+                            raise
         except (aiohttp.ClientError, asyncio.TimeoutError, ValueError) as exc:
             if isinstance(exc, ProviderError):
                 raise

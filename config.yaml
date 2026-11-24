@@ -49,7 +49,7 @@ providers:
   binance:
     kind: binance
     enabled: true
-    spot_rest_url: https://data-api.binance.vision
+    spot_rest_url: https://api.binance.com
     futures_rest_url: https://fapi.binance.com
     spot_websocket_url: wss://stream.binance.com:9443/ws
     futures_websocket_url: wss://fstream.binance.com/ws
@@ -237,8 +237,8 @@ events:
     official_x:
       adapter: x_filtered_stream
       source_tier: official_project
-      official: true
-      enabled: false
+      official: false
+      enabled: true
       url: https://api.x.com/2/tweets/search/stream
       post_url_template: "https://x.com/i/web/status/{post_id}"
       allowed_domains: [api.x.com, x.com]

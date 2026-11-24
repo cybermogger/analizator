@@ -465,3 +465,36 @@ The persistent host directories survive `docker compose down` and image rebuilds
 Read [architecture](docs/architecture.md), the [official source and cost matrix](docs/source-cost-matrix.md), and the [operations runbook](docs/operations-runbook.md) before enabling a deployment. The runbook defines stop conditions, retention, incident capture, and backup/restore steps. SQLite schema migrations are additive; the current schema is v12. A backup is made with SQLite's online backup API and verified using both integrity and foreign-key checks before it may be used for restore.
 
 Before each deployment, take a verified database snapshot, run `python bot.py --smoke-test` (bounded public read-only endpoints), inspect `python status.py`, and start with `docker compose up -d --build` only when source coverage, database integrity, paper reconciliation, and configured shadow mode are acceptable. Stop the service on stale/contradictory feeds, unexplained delivery claims, accounting or migration errors, repeated false-alert threshold breach, or calibrated-model drift. Keep Phase 4 challenger `NOT_EVALUABLE`; do not claim profitability from fixtures or a short shadow run. X/GitHub, RPC enrichment and LLM extraction remain disabled unless their documented configuration and access are separately available. The active source costs are public/no-key; VPS/egress and external API plan costs are deployment-dependent and no paid source is enabled.
+
+
+## Terminal update: grouping, leaders, Russian news and X
+
+The overview groups cards by displayed ticker only and lets the user select the
+exact venue/market/quote inside each card. This is presentation, not asset identity
+resolution; all forecasts and evidence retain exact instrument IDs.
+`/api/best` ranks the maximum LONG/SHORT estimate across fresh instruments and
+5m/15m/1h horizons. WAIT and entry filters remain visible; the leader can be ineligible.
+
+News is translated locally with Helsinki-NLP OPUS-MT EN→RU (Apache-2.0), converted
+to CTranslate2 int8. Original evidence is preserved and translation never changes
+trading inputs. Install dependencies and run `python setup_translation.py` once;
+weights are downloaded from the model author's public OPUS archive and are not
+included in source archives. The UI labels machine translations and exposes the
+original. Missing model/translation is explicit rather than fabricated Russian text.
+Model: https://huggingface.co/Helsinki-NLP/opus-mt-en-ru
+Runtime: https://opennmt.net/CTranslate2/guides/opus_mt.html
+
+`config/x_watchlist.json` contains 100 curated historical monitoring candidates,
+not a measured influence ranking or verified identity registry. Handles may change;
+numeric IDs must be independently verified before marking posts authentic.
+The X source is enabled but fails closed without `X_BEARER_TOKEN`. Set this only
+locally with an appropriate X API plan. `python setup_x_rules.py` prints proposed
+rules without network access; `--apply` adds missing rules through the official
+API, preserving existing unrelated rules. No scraping or access bypass is used.
+X's official filtered-stream sample: https://github.com/xdevplatform/samples/blob/main/python/streams/stream_posts_filtered.py
+
+### Устойчивое обновление и уровни сигнала
+Каталоги бирж, свежие котировки и углублённые стаканы обновляются раздельно. Для котировок зарезервирован сетевой слот; сбой каталога повторяется через минуту только для проблемной биржи. История активного инструмента сохраняется в ограниченном кэше при временном выпадении из обзора. Полная проверка SQLite оставлена для отдельной диагностики, регулярный heartbeat не сканирует все страницы базы.
+
+Каждая оценка со свежей котировкой содержит trade_plan: направление, вход по ask/bid точного рынка, стоп-лосс, тейк-профит, расстояния, отношение прибыли к риску до/после расчётных издержек и срок действия входа. Симметричные уровни 1.25 ATR соответствуют барьерам модели. Условный план не является допущенным сигналом; истёкшая котировка блокирует вход. Отправка ордеров отсутствует.
+

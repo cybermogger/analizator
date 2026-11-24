@@ -65,12 +65,17 @@ def triple_barrier_labels(
         frame, atr_multiplier, horizon_steps, volatility_multiplier, barrier_mode, use_structure,
     )
     labels = pd.Series(np.nan, index=frame.index, dtype=float)
+    # Use array indexing inside the horizon loop. Repeated DataFrame/Series
+    # lookups here otherwise pause live scanning when many assets refresh.
+    upper_values, lower_values = upper.to_numpy(), lower.to_numpy()
+    high_values, low_values = frame['high'].to_numpy(), frame['low'].to_numpy()
+    label_values = labels.to_numpy()
     for position in range(0, len(frame) - horizon_steps):
-        up, down = float(upper.iloc[position]), float(lower.iloc[position])
+        up, down = float(upper_values[position]), float(lower_values[position])
         label = WAIT
         for future_position in range(position + 1, position + horizon_steps + 1):
-            hits_up = float(frame["high"].iloc[future_position]) >= up
-            hits_down = float(frame["low"].iloc[future_position]) <= down
+            hits_up = float(high_values[future_position]) >= up
+            hits_down = float(low_values[future_position]) <= down
             if hits_up and hits_down:
                 label = WAIT  # Intrabar ordering is unknowable from OHLC; never invent it.
                 break
@@ -80,7 +85,7 @@ def triple_barrier_labels(
             if hits_down:
                 label = SHORT
                 break
-        labels.iloc[position] = label
+        label_values[position] = label
     return labels
 
 

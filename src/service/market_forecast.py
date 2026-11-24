@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from datetime import datetime, timezone
 from typing import Any
 
 import numpy as np
@@ -146,12 +147,28 @@ class MarketForecastService:
         if fresh and result.get("source_close") and abs((bid+ask)/2/result["source_close"]-1) > .75*result["atr_pct"]:
             result["reasons"].append("Цена уже ушла от состояния закрытой свечи")
         if fresh:
-            entry = ask if direction=="LONG" else bid
+            plan_direction = 'LONG' if p['LONG'] >= p['SHORT'] else 'SHORT'
+            entry = ask if plan_direction=="LONG" else bid
             distance = min(.20, max(.00125, 1.25*result["atr_pct"]))
-            sign = 1 if direction=="LONG" else -1
+            sign = 1 if plan_direction=="LONG" else -1
             result.update(entry_reference=entry, stop=entry*(1-sign*distance),
                 target=entry*(1+sign*distance), expires_at_ms=min(now+60_000,received+30_000))
+            result['trade_plan'] = {
+                'direction': plan_direction, 'entry': entry,
+                'stop_loss': result['stop'], 'take_profit': result['target'],
+                'stop_distance_percent': distance*100, 'target_distance_percent': distance*100,
+                'reward_risk': 1.0,
+                'reward_risk_after_costs': max(0.0,(distance-costs)/(distance+costs)),
+                'estimated_roundtrip_cost_percent': costs*100,
+                'expires_at_ms': result['expires_at_ms'],
+                'time_exit_at_ms': now+HORIZONS[horizon]*300_000,
+                'quote_received_at_ms': received,
+                'instrument_id': iid, 'quote': card.get('quote'),
+                'basis': '1.25 ATR, matching the forecast barriers',
+            }
         result["eligible"] = not result["reasons"]
+        if result.get('trade_plan'):
+            result['trade_plan']['status'] = 'SIGNAL' if result['eligible'] else 'CONDITIONAL'
         return result
 
     def forecasts(self, horizon: str = "15m") -> list[dict]:
@@ -235,7 +252,8 @@ class MarketForecastService:
         p=f["probabilities"]
         return (f"🧪 Сильный экспериментальный сетап · {f['instrument_id']} · {f['horizon']}\n"
             f"{f['direction']} · LONG {p['LONG']:.0f}% / SHORT {p['SHORT']:.0f}% / WAIT {p['WAIT']:.0f}%\n"
-            f"Вход-ориентир {f['entry_reference']:.8g}; стоп {f['stop']:.8g}; цель {f['target']:.8g}.\n"
+            f"Вход-ориентир {f['entry_reference']:.8g}; стоп-лосс {f['stop']:.8g}; тейк-профит {f['target']:.8g} {f.get('quote','')}.\n"
+            f"Риск/прибыль 1:1 до расходов. Вход действителен до {datetime.fromtimestamp(f['expires_at_ms']/1000,timezone.utc):%H:%M:%S} UTC; горизонт {f['horizon']}.\n"
             f"Исторических аналогов: {f['sample_count']}; расходы {f['cost_fraction']*100:.3f}%.\n"
             "Оценка не калибрована; преимущество на будущих данных не подтверждено. TTL котировки до 30 секунд. Ордер не отправлен.")
 
@@ -252,6 +270,8 @@ class MarketForecastService:
             seen.add(row["base"]); p=row["probabilities"]
             lines.append(f"{row['instrument_id']}: L {p['LONG']:.0f}% / S {p['SHORT']:.0f}% / WAIT {p['WAIT']:.0f}% · "
                 + ("кандидат" if row["eligible"] else "; ".join(row["reasons"][:2])))
+            if row['eligible']:
+                lines.append(f"Вход {row['entry_reference']:.8g} · SL {row['stop']:.8g} · TP {row['target']:.8g} {row['quote']}")
             if len(seen)>=5: break
         if not seen: lines.append("Кандидатов пока нет: история или котировки ещё собираются.")
         await self.send_once(key,"\n".join(lines)[:3900],now)

@@ -637,11 +637,13 @@ class SQLiteStorage:
         with self._lock:
             return [dict(row) for row in self._connection.execute(sql, tuple(params)).fetchall()]
 
-    def health(self) -> dict[str, Any]:
-        result = self.query("PRAGMA integrity_check")
-        foreign_key_errors = self.query("PRAGMA foreign_key_check")
+    def health(self, *, deep: bool = True) -> dict[str, Any]:
+        # Full integrity checks scan every page and index. Keep them available
+        # for explicit diagnostics, outside the daemon's periodic heartbeat.
+        result = self.query("PRAGMA integrity_check") if deep else []
+        foreign_key_errors = self.query("PRAGMA foreign_key_check") if deep else []
         versions = self.query("SELECT MAX(version) AS version FROM schema_migrations")
-        integrity = next(iter(result[0].values())) if result else "unknown"
+        integrity = next(iter(result[0].values())) if result else "not_checked"
         if foreign_key_errors:
             integrity = "foreign_key_error"
         size = 0 if str(self.path) == ":memory:" else self.path.stat().st_size
