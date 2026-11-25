@@ -1512,5 +1512,1397 @@
     }
   ],
   "promotion_passed": false,
-  "promotion_status": "BLOCKED_OUT_OF_SAMPLE"
+  "promotion_status": "BLOCKED_OUT_OF_SAMPLE",
+  "research_challenge": {
+    "period": "2026-11-01 / 2026-11-24 UTC",
+    "passed": false,
+    "selected": {
+      "name": "crowded_reversal",
+      "quantile": 0.999,
+      "cutoff": 2.1032642085133046,
+      "regime": "active",
+      "calibration_sha256": "a3b7ffd41c6a4dd75f907589b959d439fba407cfe237f5c14e77ac4fef49a8e3",
+      "validation": {
+        "September": {
+          "trades": 44,
+          "net_winrate_percent": 43.18181818181818,
+          "tp_hit_percent": 34.090909090909086,
+          "profit_factor": 0.9494349590432061,
+          "mean_net_price_percent": 0.0022364474364023365,
+          "mean_net_margin_percent": 0.011182237182011683,
+          "sum_net_trade_percent": 0.0984036872017028,
+          "stop_exits": 22,
+          "time_exits": 7,
+          "initial_equity": 10000,
+          "final_equity": 9972.351628748602,
+          "net_equity_return_percent": -0.2764837125139863,
+          "max_closed_equity_drawdown_percent": 1.8700854300847225,
+          "skipped_capacity": 0,
+          "maximum_concurrent_positions": 4,
+          "margin_cap_percent": 40,
+          "risk_per_trade_equity_percent": 0.25,
+          "drawdown_basis": "closed equity only; no intrabar mark-to-market portfolio path",
+          "cost_multiplier": 1.0
+        },
+        "October": {
+          "trades": 23,
+          "net_winrate_percent": 47.82608695652174,
+          "tp_hit_percent": 30.434782608695656,
+          "profit_factor": 1.0423519699994657,
+          "mean_net_price_percent": 0.0015819655072699687,
+          "mean_net_margin_percent": 0.007909827536349842,
+          "sum_net_trade_percent": 0.03638520666720928,
+          "stop_exits": 12,
+          "time_exits": 4,
+          "initial_equity": 10000,
+          "final_equity": 10012.359161057231,
+          "net_equity_return_percent": 0.1235916105723156,
+          "max_closed_equity_drawdown_percent": 1.6949284438522616,
+          "skipped_capacity": 0,
+          "maximum_concurrent_positions": 4,
+          "margin_cap_percent": 40,
+          "risk_per_trade_equity_percent": 0.25,
+          "drawdown_basis": "closed equity only; no intrabar mark-to-market portfolio path",
+          "cost_multiplier": 1.0
+        }
+      }
+    },
+    "active_days": 10,
+    "symbols": [
+      "AVAXUSDT",
+      "BNBUSDT",
+      "DOTUSDT",
+      "ETHUSDT",
+      "LINKUSDT",
+      "SOLUSDT",
+      "XRPUSDT"
+    ],
+    "stats": {
+      "trades": 15,
+      "net_winrate_percent": 20.0,
+      "tp_hit_percent": 20.0,
+      "profit_factor": 0.3926717708616951,
+      "mean_net_price_percent": -0.31463926071046217,
+      "mean_net_margin_percent": -1.5731963035523109,
+      "sum_net_trade_percent": -4.719588910656933,
+      "stop_exits": 10,
+      "time_exits": 2,
+      "initial_equity": 10000,
+      "final_equity": 9852.676022810385,
+      "net_equity_return_percent": -1.473239771896151,
+      "max_closed_equity_drawdown_percent": 2.4103464765158567,
+      "skipped_capacity": 0,
+      "maximum_concurrent_positions": 4,
+      "margin_cap_percent": 40,
+      "risk_per_trade_equity_percent": 0.25,
+      "drawdown_basis": "closed equity only; no intrabar mark-to-market portfolio path",
+      "cost_multiplier": 1.0
+    },
+    "double_costs": {
+      "trades": 15,
+      "net_winrate_percent": 20.0,
+      "tp_hit_percent": 20.0,
+      "profit_factor": 0.26114126741600235,
+      "mean_net_price_percent": -0.4747307134696825,
+      "mean_net_margin_percent": -2.3736535673484123,
+      "sum_net_trade_percent": -7.120960702045237,
+      "stop_exits": 10,
+      "time_exits": 2,
+      "initial_equity": 10000,
+      "final_equity": 9775.436798253002,
+      "net_equity_return_percent": -2.2456320174699784,
+      "max_closed_equity_drawdown_percent": 3.023348792058256,
+      "skipped_capacity": 0,
+      "maximum_concurrent_positions": 4,
+      "margin_cap_percent": 40,
+      "risk_per_trade_equity_percent": 0.25,
+      "drawdown_basis": "closed equity only; no intrabar mark-to-market portfolio path",
+      "cost_multiplier": 2
+    },
+    "candidate_count": 64,
+    "selection_sha256": "0b9103ba99f98d775e39097b163a8e1216991b8d6afeb26d7f9db5c70bb64f80",
+    "fills": [
+      {
+        "entry_at_ms": 1793528400000,
+        "symbol": "XRPUSDT",
+        "direction": "SHORT",
+        "entry": 1.259,
+        "stop_loss": 1.2646654999999998,
+        "take_profit": 1.2468217232008991,
+        "exit": 1.2468217232008991,
+        "exit_reason": "TP",
+        "gross_return": 0.0096729760119941,
+        "fees": 0.000995163511994,
+        "spread": 0.0002,
+        "slippage": 0.0004,
+        "funding": -0.0,
+        "net_return": 0.0080778125000001,
+        "pnl": 32.0433674481341
+      },
+      {
+        "entry_at_ms": 1793638200000,
+        "symbol": "DOTUSDT",
+        "direction": "SHORT",
+        "entry": 0.946,
+        "stop_loss": 0.9521589760787535,
+        "take_profit": 0.9344718945942116,
+        "exit": 0.9344718945942116,
+        "exit_reason": "TP",
+        "gross_return": 0.012186157934237,
+        "fees": 0.0009939069210328,
+        "spread": 0.0002,
+        "slippage": 0.0004,
+        "funding": -0.0,
+        "net_return": 0.0105922510132041,
+        "pnl": 31.953472288013494
+      },
+      {
+        "entry_at_ms": 1793708400000,
+        "symbol": "XRPUSDT",
+        "direction": "SHORT",
+        "entry": 1.2782,
+        "stop_loss": 1.2839519,
+        "take_profit": 1.2658360020614692,
+        "exit": 1.2839519,
+        "exit_reason": "SL",
+        "gross_return": -0.0044999999999999,
+        "fees": 0.00100225,
+        "spread": 0.0002,
+        "slippage": 0.0004,
+        "funding": -0.0,
+        "net_return": -0.0061022499999999,
+        "pnl": -24.36154735026356
+      },
+      {
+        "entry_at_ms": 1793709300000,
+        "symbol": "XRPUSDT",
+        "direction": "SHORT",
+        "entry": 1.2812,
+        "stop_loss": 1.287904280651531,
+        "take_profit": 1.2676333823190191,
+        "exit": 1.287904280651531,
+        "exit_reason": "SL",
+        "gross_return": -0.0052328134963559,
+        "fees": 0.0010026164067481,
+        "spread": 0.0002,
+        "slippage": 0.0004,
+        "funding": -0.0,
+        "net_return": -0.0068354299031041,
+        "pnl": -24.38558277140792
+      },
+      {
+        "entry_at_ms": 1793761500000,
+        "symbol": "XRPUSDT",
+        "direction": "SHORT",
+        "entry": 1.2494,
+        "stop_loss": 1.2552687691033255,
+        "take_profit": 1.2370064973914576,
+        "exit": 1.2552687691033255,
+        "exit_reason": "SL",
+        "gross_return": -0.0046972699722471,
+        "fees": 0.0010023486349861,
+        "spread": 0.0002,
+        "slippage": 0.0004,
+        "funding": -0.0,
+        "net_return": -0.0062996186072332,
+        "pnl": -24.267675243498456
+      },
+      {
+        "entry_at_ms": 1793803800000,
+        "symbol": "ETHUSDT",
+        "direction": "SHORT",
+        "entry": 2382.48,
+        "stop_loss": 2397.748561908931,
+        "take_profit": 2353.750075724781,
+        "exit": 2397.748561908931,
+        "exit_reason": "SL",
+        "gross_return": -0.0064086841899748,
+        "fees": 0.0010032043420949,
+        "spread": 0.0002,
+        "slippage": 0.0004,
+        "funding": -0.0,
+        "net_return": -0.0080118885320698,
+        "pnl": -24.3691308255974
+      },
+      {
+        "entry_at_ms": 1793803800000,
+        "symbol": "SOLUSDT",
+        "direction": "SHORT",
+        "entry": 95.42,
+        "stop_loss": 96.08666279837529,
+        "take_profit": 94.20041363096644,
+        "exit": 96.08666279837529,
+        "exit_reason": "SL",
+        "gross_return": -0.006986614948389,
+        "fees": 0.0010034933074741,
+        "spread": 0.0002,
+        "slippage": 0.0004,
+        "funding": -0.0,
+        "net_return": -0.0085901082558632,
+        "pnl": -24.409146838545954
+      },
+      {
+        "entry_at_ms": 1793804700000,
+        "symbol": "XRPUSDT",
+        "direction": "SHORT",
+        "entry": 1.3301,
+        "stop_loss": 1.3408457843349744,
+        "take_profit": 1.3112835566877292,
+        "exit": 1.3408457843349744,
+        "exit_reason": "SL",
+        "gross_return": -0.0080789296556456,
+        "fees": 0.0010040394648278,
+        "spread": 0.0002,
+        "slippage": 0.0004,
+        "funding": -0.0,
+        "net_return": -0.0096829691204734,
+        "pnl": -24.352512588098637
+      },
+      {
+        "entry_at_ms": 1793894700000,
+        "symbol": "BNBUSDT",
+        "direction": "SHORT",
+        "entry": 689.44,
+        "stop_loss": 694.4044749926286,
+        "take_profit": 680.4435696775053,
+        "exit": 694.4044749926286,
+        "exit_reason": "SL",
+        "gross_return": -0.0072007353687464,
+        "fees": 0.0010036003676843,
+        "spread": 0.0002,
+        "slippage": 0.0004,
+        "funding": -0.0,
+        "net_return": -0.0088043357364308,
+        "pnl": -24.243901686137026
+      },
+      {
+        "entry_at_ms": 1794057600000,
+        "symbol": "BNBUSDT",
+        "direction": "SHORT",
+        "entry": 695.17,
+        "stop_loss": 698.2982649999999,
+        "take_profit": 688.4456372657421,
+        "exit": 694.9,
+        "exit_reason": "TIME",
+        "gross_return": 0.0003883942057337,
+        "fees": 0.0009998058028971,
+        "spread": 0.0002,
+        "slippage": 0.0004,
+        "funding": -0.0,
+        "net_return": -0.0012114115971633,
+        "pnl": -4.754345936928628
+      },
+      {
+        "entry_at_ms": 1794061200000,
+        "symbol": "LINKUSDT",
+        "direction": "SHORT",
+        "entry": 10.897,
+        "stop_loss": 10.9460365,
+        "take_profit": 10.7915935803973,
+        "exit": 10.9460365,
+        "exit_reason": "SL",
+        "gross_return": -0.0044999999999999,
+        "fees": 0.00100225,
+        "spread": 0.0002,
+        "slippage": 0.0004,
+        "funding": -0.0,
+        "net_return": -0.0061022499999999,
+        "pnl": -23.94909175507113
+      },
+      {
+        "entry_at_ms": 1794147600000,
+        "symbol": "DOTUSDT",
+        "direction": "LONG",
+        "entry": 0.889,
+        "stop_loss": 0.8849995,
+        "take_profit": 0.8976028761255629,
+        "exit": 0.89,
+        "exit_reason": "TIME",
+        "gross_return": 0.0011248593925758,
+        "fees": 0.0010005624296962,
+        "spread": 0.0002,
+        "slippage": 0.0004,
+        "funding": -9.703999999999964e-05,
+        "net_return": -0.0003786630371203,
+        "pnl": -1.0646791329588248
+      },
+      {
+        "entry_at_ms": 1794665100000,
+        "symbol": "AVAXUSDT",
+        "direction": "LONG",
+        "entry": 7.859,
+        "stop_loss": 7.806082944862567,
+        "take_profit": 7.956991191358011,
+        "exit": 7.806082944862567,
+        "exit_reason": "SL",
+        "gross_return": -0.0067333064177927,
+        "fees": 0.0009966333467911,
+        "spread": 0.0002,
+        "slippage": 0.0004,
+        "funding": 0.0,
+        "net_return": -0.0083299397645838,
+        "pnl": -24.081408797867145
+      },
+      {
+        "entry_at_ms": 1795350000000,
+        "symbol": "DOTUSDT",
+        "direction": "LONG",
+        "entry": 0.6634,
+        "stop_loss": 0.6600864705504635,
+        "take_profit": 0.670230025868949,
+        "exit": 0.6600864705504635,
+        "exit_reason": "SL",
+        "gross_return": -0.0049947685401514,
+        "fees": 0.0009975026157299,
+        "spread": 0.0002,
+        "slippage": 0.0004,
+        "funding": 0.0,
+        "net_return": -0.0065922711558813,
+        "pnl": -18.338170296873304
+      },
+      {
+        "entry_at_ms": 1795526400000,
+        "symbol": "DOTUSDT",
+        "direction": "LONG",
+        "entry": 0.6551,
+        "stop_loss": 0.6505774527725005,
+        "take_profit": 0.6634076662754951,
+        "exit": 0.6634076662754951,
+        "exit_reason": "TP",
+        "gross_return": 0.0126815238520761,
+        "fees": 0.001006340761926,
+        "spread": 0.0002,
+        "slippage": 0.0004,
+        "funding": 0.0,
+        "net_return": 0.01107518309015,
+        "pnl": 31.25637629748476
+      }
+    ],
+    "comparison": [
+      {
+        "name": "sweep",
+        "quantile": 0.975,
+        "regime": "all",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 786,
+            "return": -39.05172946325555
+          },
+          {
+            "trades": 878,
+            "return": -40.829499398364064
+          }
+        ]
+      },
+      {
+        "name": "sweep",
+        "quantile": 0.975,
+        "regime": "active",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 491,
+            "return": -29.188459431237735
+          },
+          {
+            "trades": 570,
+            "return": -33.741984511361224
+          }
+        ]
+      },
+      {
+        "name": "sweep",
+        "quantile": 0.995,
+        "regime": "all",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 150,
+            "return": -7.70697196249126
+          },
+          {
+            "trades": 159,
+            "return": -12.163327503321709
+          }
+        ]
+      },
+      {
+        "name": "sweep",
+        "quantile": 0.995,
+        "regime": "active",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 114,
+            "return": -6.248732299954063
+          },
+          {
+            "trades": 122,
+            "return": -10.223955987065969
+          }
+        ]
+      },
+      {
+        "name": "relative_reversal",
+        "quantile": 0.975,
+        "regime": "all",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 771,
+            "return": -32.99371605835515
+          },
+          {
+            "trades": 852,
+            "return": -37.33651220334693
+          }
+        ]
+      },
+      {
+        "name": "relative_reversal",
+        "quantile": 0.975,
+        "regime": "active",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 587,
+            "return": -25.55869448574597
+          },
+          {
+            "trades": 606,
+            "return": -27.074148202069992
+          }
+        ]
+      },
+      {
+        "name": "relative_reversal",
+        "quantile": 0.995,
+        "regime": "all",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 168,
+            "return": -11.580170948175706
+          },
+          {
+            "trades": 175,
+            "return": -15.2282704130554
+          }
+        ]
+      },
+      {
+        "name": "relative_reversal",
+        "quantile": 0.995,
+        "regime": "active",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 145,
+            "return": -9.009975317695462
+          },
+          {
+            "trades": 151,
+            "return": -14.090096186092138
+          }
+        ]
+      },
+      {
+        "name": "breakout",
+        "quantile": 0.975,
+        "regime": "all",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 699,
+            "return": -37.10959590974879
+          },
+          {
+            "trades": 761,
+            "return": -36.6962112902415
+          }
+        ]
+      },
+      {
+        "name": "breakout",
+        "quantile": 0.975,
+        "regime": "active",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 544,
+            "return": -25.798481853678645
+          },
+          {
+            "trades": 583,
+            "return": -30.78800133362939
+          }
+        ]
+      },
+      {
+        "name": "breakout",
+        "quantile": 0.995,
+        "regime": "all",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 183,
+            "return": -9.320104416385222
+          },
+          {
+            "trades": 203,
+            "return": -11.121608951728101
+          }
+        ]
+      },
+      {
+        "name": "breakout",
+        "quantile": 0.995,
+        "regime": "active",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 168,
+            "return": -8.620813097318191
+          },
+          {
+            "trades": 172,
+            "return": -7.867245042319615
+          }
+        ]
+      },
+      {
+        "name": "pullback",
+        "quantile": 0.975,
+        "regime": "all",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 782,
+            "return": -32.96998449069589
+          },
+          {
+            "trades": 946,
+            "return": -43.263419179378296
+          }
+        ]
+      },
+      {
+        "name": "pullback",
+        "quantile": 0.975,
+        "regime": "active",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 396,
+            "return": -21.816911685231332
+          },
+          {
+            "trades": 500,
+            "return": -23.73218585279505
+          }
+        ]
+      },
+      {
+        "name": "pullback",
+        "quantile": 0.995,
+        "regime": "all",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 168,
+            "return": -8.038955447314034
+          },
+          {
+            "trades": 250,
+            "return": -14.92281154513061
+          }
+        ]
+      },
+      {
+        "name": "pullback",
+        "quantile": 0.995,
+        "regime": "active",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 81,
+            "return": -6.1703533676571665
+          },
+          {
+            "trades": 109,
+            "return": -5.665119160724064
+          }
+        ]
+      },
+      {
+        "name": "ridge",
+        "quantile": 0.975,
+        "regime": "all",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 252,
+            "return": -18.186000879845533
+          },
+          {
+            "trades": 296,
+            "return": -12.726280051654959
+          }
+        ]
+      },
+      {
+        "name": "ridge",
+        "quantile": 0.975,
+        "regime": "active",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 112,
+            "return": -9.34352129597884
+          },
+          {
+            "trades": 103,
+            "return": -3.31266966180348
+          }
+        ]
+      },
+      {
+        "name": "ridge",
+        "quantile": 0.995,
+        "regime": "all",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 45,
+            "return": -5.43081253857819
+          },
+          {
+            "trades": 51,
+            "return": -2.588082258932356
+          }
+        ]
+      },
+      {
+        "name": "ridge",
+        "quantile": 0.995,
+        "regime": "active",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 30,
+            "return": -5.087190468106728
+          },
+          {
+            "trades": 11,
+            "return": 0.14155436016780598
+          }
+        ]
+      },
+      {
+        "name": "boost",
+        "quantile": 0.975,
+        "regime": "all",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 778,
+            "return": -41.46309902541928
+          },
+          {
+            "trades": 515,
+            "return": -22.159572434426135
+          }
+        ]
+      },
+      {
+        "name": "boost",
+        "quantile": 0.975,
+        "regime": "active",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 289,
+            "return": -15.625763866248088
+          },
+          {
+            "trades": 211,
+            "return": -3.3742724077760466
+          }
+        ]
+      },
+      {
+        "name": "boost",
+        "quantile": 0.995,
+        "regime": "all",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 223,
+            "return": -10.81607847758772
+          },
+          {
+            "trades": 103,
+            "return": -4.8947451190956
+          }
+        ]
+      },
+      {
+        "name": "boost",
+        "quantile": 0.995,
+        "regime": "active",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 52,
+            "return": -3.4359016210165794
+          },
+          {
+            "trades": 29,
+            "return": -0.7238233715350595
+          }
+        ]
+      },
+      {
+        "name": "flow_boost",
+        "quantile": 0.995,
+        "regime": "all",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 228,
+            "return": -11.912702760835813
+          },
+          {
+            "trades": 128,
+            "return": -7.306430988015567
+          }
+        ]
+      },
+      {
+        "name": "flow_boost",
+        "quantile": 0.995,
+        "regime": "active",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 61,
+            "return": -2.9623585033647037
+          },
+          {
+            "trades": 41,
+            "return": -2.2269468598243303
+          }
+        ]
+      },
+      {
+        "name": "flow_boost",
+        "quantile": 0.999,
+        "regime": "all",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 28,
+            "return": -2.3009418747734323
+          },
+          {
+            "trades": 23,
+            "return": 0.4564608136326198
+          }
+        ]
+      },
+      {
+        "name": "flow_boost",
+        "quantile": 0.999,
+        "regime": "active",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 15,
+            "return": -1.3929803131226826
+          },
+          {
+            "trades": 3,
+            "return": 0.3514481881158549
+          }
+        ]
+      },
+      {
+        "name": "absorption",
+        "quantile": 0.995,
+        "regime": "all",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 168,
+            "return": -10.971749224341544
+          },
+          {
+            "trades": 240,
+            "return": -10.491855528621164
+          }
+        ]
+      },
+      {
+        "name": "absorption",
+        "quantile": 0.995,
+        "regime": "active",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 95,
+            "return": -6.8922446131749915
+          },
+          {
+            "trades": 143,
+            "return": -6.323629036320034
+          }
+        ]
+      },
+      {
+        "name": "absorption",
+        "quantile": 0.999,
+        "regime": "all",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 32,
+            "return": -2.5596051024272093
+          },
+          {
+            "trades": 54,
+            "return": -3.531432588704009
+          }
+        ]
+      },
+      {
+        "name": "absorption",
+        "quantile": 0.999,
+        "regime": "active",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 21,
+            "return": -1.1235889701049162
+          },
+          {
+            "trades": 33,
+            "return": -1.9891434570476707
+          }
+        ]
+      },
+      {
+        "name": "flow_trend",
+        "quantile": 0.995,
+        "regime": "all",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 216,
+            "return": -14.37897297849906
+          },
+          {
+            "trades": 304,
+            "return": -18.53329657872567
+          }
+        ]
+      },
+      {
+        "name": "flow_trend",
+        "quantile": 0.995,
+        "regime": "active",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 143,
+            "return": -8.96816881819128
+          },
+          {
+            "trades": 201,
+            "return": -9.59319113371202
+          }
+        ]
+      },
+      {
+        "name": "flow_trend",
+        "quantile": 0.999,
+        "regime": "all",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 32,
+            "return": -0.3483763980720478
+          },
+          {
+            "trades": 46,
+            "return": -2.661111066817523
+          }
+        ]
+      },
+      {
+        "name": "flow_trend",
+        "quantile": 0.999,
+        "regime": "active",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 23,
+            "return": 0.3972086951366416
+          },
+          {
+            "trades": 37,
+            "return": -1.3789704046250684
+          }
+        ]
+      },
+      {
+        "name": "crowded_reversal",
+        "quantile": 0.995,
+        "regime": "all",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 241,
+            "return": -13.635473275697363
+          },
+          {
+            "trades": 189,
+            "return": -2.873093243367675
+          }
+        ]
+      },
+      {
+        "name": "crowded_reversal",
+        "quantile": 0.995,
+        "regime": "active",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 175,
+            "return": -9.139819949749961
+          },
+          {
+            "trades": 133,
+            "return": -3.94393156760825
+          }
+        ]
+      },
+      {
+        "name": "crowded_reversal",
+        "quantile": 0.999,
+        "regime": "all",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 53,
+            "return": -1.3312759678954844
+          },
+          {
+            "trades": 29,
+            "return": 0.4152914634185212
+          }
+        ]
+      },
+      {
+        "name": "crowded_reversal",
+        "quantile": 0.999,
+        "regime": "active",
+        "limit_depth": null,
+        "periods": [
+          {
+            "trades": 44,
+            "return": -0.2764837125139863
+          },
+          {
+            "trades": 23,
+            "return": 0.1235916105723156
+          }
+        ]
+      },
+      {
+        "name": "sweep",
+        "quantile": 0.75,
+        "regime": "all",
+        "limit_depth": 0.006,
+        "periods": [
+          {
+            "trades": 225,
+            "return": -17.490686900767816
+          },
+          {
+            "trades": 182,
+            "return": -14.931701068471103
+          }
+        ]
+      },
+      {
+        "name": "sweep",
+        "quantile": 0.95,
+        "regime": "all",
+        "limit_depth": 0.006,
+        "periods": [
+          {
+            "trades": 78,
+            "return": -8.022013445879017
+          },
+          {
+            "trades": 45,
+            "return": -4.2149908992032525
+          }
+        ]
+      },
+      {
+        "name": "relative_reversal",
+        "quantile": 0.75,
+        "regime": "all",
+        "limit_depth": 0.006,
+        "periods": [
+          {
+            "trades": 356,
+            "return": -19.911793366101126
+          },
+          {
+            "trades": 325,
+            "return": -22.55044138293765
+          }
+        ]
+      },
+      {
+        "name": "relative_reversal",
+        "quantile": 0.95,
+        "regime": "all",
+        "limit_depth": 0.006,
+        "periods": [
+          {
+            "trades": 141,
+            "return": -8.518502079553913
+          },
+          {
+            "trades": 126,
+            "return": -9.372511586305388
+          }
+        ]
+      },
+      {
+        "name": "breakout",
+        "quantile": 0.75,
+        "regime": "all",
+        "limit_depth": 0.006,
+        "periods": [
+          {
+            "trades": 180,
+            "return": -15.51325111120595
+          },
+          {
+            "trades": 178,
+            "return": -6.52750126411904
+          }
+        ]
+      },
+      {
+        "name": "breakout",
+        "quantile": 0.95,
+        "regime": "all",
+        "limit_depth": 0.006,
+        "periods": [
+          {
+            "trades": 66,
+            "return": -7.070876140175408
+          },
+          {
+            "trades": 62,
+            "return": -0.29918860071944664
+          }
+        ]
+      },
+      {
+        "name": "pullback",
+        "quantile": 0.75,
+        "regime": "all",
+        "limit_depth": 0.006,
+        "periods": [
+          {
+            "trades": 169,
+            "return": -14.3601166753066
+          },
+          {
+            "trades": 171,
+            "return": -9.609565047800327
+          }
+        ]
+      },
+      {
+        "name": "pullback",
+        "quantile": 0.95,
+        "regime": "all",
+        "limit_depth": 0.006,
+        "periods": [
+          {
+            "trades": 56,
+            "return": -5.133179255513065
+          },
+          {
+            "trades": 70,
+            "return": -4.01539022712597
+          }
+        ]
+      },
+      {
+        "name": "sweep",
+        "quantile": 0.75,
+        "regime": "all",
+        "limit_depth": 0.012,
+        "periods": [
+          {
+            "trades": 76,
+            "return": -5.955124230939202
+          },
+          {
+            "trades": 41,
+            "return": -3.7052237493827467
+          }
+        ]
+      },
+      {
+        "name": "sweep",
+        "quantile": 0.95,
+        "regime": "all",
+        "limit_depth": 0.012,
+        "periods": [
+          {
+            "trades": 29,
+            "return": -2.852080241024779
+          },
+          {
+            "trades": 14,
+            "return": -1.7279478419446104
+          }
+        ]
+      },
+      {
+        "name": "relative_reversal",
+        "quantile": 0.75,
+        "regime": "all",
+        "limit_depth": 0.012,
+        "periods": [
+          {
+            "trades": 157,
+            "return": -11.13069757209203
+          },
+          {
+            "trades": 123,
+            "return": -9.609520144643158
+          }
+        ]
+      },
+      {
+        "name": "relative_reversal",
+        "quantile": 0.95,
+        "regime": "all",
+        "limit_depth": 0.012,
+        "periods": [
+          {
+            "trades": 80,
+            "return": -3.855503218577361
+          },
+          {
+            "trades": 61,
+            "return": -5.738832669401706
+          }
+        ]
+      },
+      {
+        "name": "breakout",
+        "quantile": 0.75,
+        "regime": "all",
+        "limit_depth": 0.012,
+        "periods": [
+          {
+            "trades": 65,
+            "return": -7.318821239959106
+          },
+          {
+            "trades": 46,
+            "return": 0.7178147098498844
+          }
+        ]
+      },
+      {
+        "name": "breakout",
+        "quantile": 0.95,
+        "regime": "all",
+        "limit_depth": 0.012,
+        "periods": [
+          {
+            "trades": 25,
+            "return": -3.9421187027334548
+          },
+          {
+            "trades": 19,
+            "return": 0.005398824335745012
+          }
+        ]
+      },
+      {
+        "name": "pullback",
+        "quantile": 0.75,
+        "regime": "all",
+        "limit_depth": 0.012,
+        "periods": [
+          {
+            "trades": 52,
+            "return": -2.5203725716078096
+          },
+          {
+            "trades": 50,
+            "return": -3.4974687051278153
+          }
+        ]
+      },
+      {
+        "name": "pullback",
+        "quantile": 0.95,
+        "regime": "all",
+        "limit_depth": 0.012,
+        "periods": [
+          {
+            "trades": 24,
+            "return": -2.106234545036001
+          },
+          {
+            "trades": 13,
+            "return": -0.6662069706734108
+          }
+        ]
+      },
+      {
+        "name": "sweep",
+        "quantile": 0.75,
+        "regime": "all",
+        "limit_depth": 0.02,
+        "periods": [
+          {
+            "trades": 16,
+            "return": -1.379205681381468
+          },
+          {
+            "trades": 6,
+            "return": -0.9002728048836395
+          }
+        ]
+      },
+      {
+        "name": "sweep",
+        "quantile": 0.95,
+        "regime": "all",
+        "limit_depth": 0.02,
+        "periods": [
+          {
+            "trades": 8,
+            "return": -0.2723980947346494
+          },
+          {
+            "trades": 4,
+            "return": -0.9755420962069161
+          }
+        ]
+      },
+      {
+        "name": "relative_reversal",
+        "quantile": 0.75,
+        "regime": "all",
+        "limit_depth": 0.02,
+        "periods": [
+          {
+            "trades": 36,
+            "return": -2.441513663221262
+          },
+          {
+            "trades": 38,
+            "return": -4.3546286923867195
+          }
+        ]
+      },
+      {
+        "name": "relative_reversal",
+        "quantile": 0.95,
+        "regime": "all",
+        "limit_depth": 0.02,
+        "periods": [
+          {
+            "trades": 22,
+            "return": -1.418972757271808
+          },
+          {
+            "trades": 25,
+            "return": -4.189256491294035
+          }
+        ]
+      },
+      {
+        "name": "breakout",
+        "quantile": 0.75,
+        "regime": "all",
+        "limit_depth": 0.02,
+        "periods": [
+          {
+            "trades": 9,
+            "return": -0.3519123702429128
+          },
+          {
+            "trades": 3,
+            "return": -0.6615013245059864
+          }
+        ]
+      },
+      {
+        "name": "breakout",
+        "quantile": 0.95,
+        "regime": "all",
+        "limit_depth": 0.02,
+        "periods": [
+          {
+            "trades": 5,
+            "return": -0.659483884566181
+          },
+          {
+            "trades": 0,
+            "return": 0.0
+          }
+        ]
+      },
+      {
+        "name": "pullback",
+        "quantile": 0.75,
+        "regime": "all",
+        "limit_depth": 0.02,
+        "periods": [
+          {
+            "trades": 5,
+            "return": 0.26364249593096023
+          },
+          {
+            "trades": 8,
+            "return": -0.5979118467949962
+          }
+        ]
+      },
+      {
+        "name": "pullback",
+        "quantile": 0.95,
+        "regime": "all",
+        "limit_depth": 0.02,
+        "periods": [
+          {
+            "trades": 4,
+            "return": 0.5069302311606405
+          },
+          {
+            "trades": 2,
+            "return": -0.2849847495559832
+          }
+        ]
+      }
+    ]
+  }
 }

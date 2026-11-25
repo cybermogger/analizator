@@ -299,12 +299,53 @@ async function refreshX(){
     const host=$('x-accounts');host.replaceChildren();for(const account of data.accounts){const link=el('a','x-account','@'+account.handle);link.href=account.profile_url;link.target='_blank';link.rel='noopener noreferrer';link.append(el('small','',account.category));host.append(link);}
   }catch{$('x-state').textContent='Не удалось проверить подключение X.';}
 }
+function researchTable(labels,rows){
+  const wrap=el('div','table-scroll'), table=el('table'), header=el('tr');
+  for(const label of labels)header.append(el('th','',label));
+  table.append(header);
+  for(const values of rows){
+    const row=el('tr');
+    for(const value of values)row.append(el('td','',String(value)));
+    table.append(row);
+  }
+  wrap.append(table);
+  return wrap;
+}
+
+function renderChallenge(host,report){
+  const num=(n,d=2)=>n==null?'—':Number(n).toLocaleString('ru-RU',{minimumFractionDigits:d,maximumFractionDigits:d});
+  const pct=n=>n==null?'—':num(n)+'%';
+  const price=n=>Number(n).toLocaleString('ru-RU',{maximumSignificantDigits:8});
+  const names={sweep:'Отбой от экстремума',relative_reversal:'Возврат к BTC',breakout:'Пробой',pullback:'Откат по тренду',ridge:'Ридж-регрессия',boost:'Градиентный бустинг',flow_boost:'Бустинг с потоком заявок',absorption:'Поглощение агрессивных сделок',flow_trend:'Импульс агрессивных сделок',crowded_reversal:'Разворот по funding и отклонению от BTC'};
+  const list=(p,s)=>[p,s.trades,pct(s.net_winrate_percent),num(s.profit_factor),pct(s.net_equity_return_percent),pct(s.max_closed_equity_drawdown_percent)];
+  host.append(el('h3','',names[report.selected.name]||report.selected.name),
+    el('p','',`Сравнили ${report.candidate_count} вариантов. Отбор по сентябрю и октябрю. Независимая проверка с 1 по 24 ноября 2026 года, Binance USD-M, плечо 5×, удержание до двух часов.`),
+    researchTable(['Период','Сделок','Винрейт','Profit factor','Доход счёта','Просадка*'],[
+      list('Сентябрь · отбор',report.selected.validation.September),list('Октябрь · отбор',report.selected.validation.October),
+      list('Ноябрь · тест',report.stats),list('Ноябрь · двойные издержки',report.double_costs)]),
+    el('p','',`В ноябре сделки появились в ${report.active_days} из 24 дней. Тейк достигнут в ${pct(report.stats.tp_hit_percent)} сделок. Средний результат на маржу ${pct(report.stats.mean_net_margin_percent)}.`));
+  const journal=el('details');
+  journal.append(el('summary','',`Журнал ноябрьского теста · ${report.fills.length} сделок`),
+    researchTable(['Вход, UTC','Контракт','Сторона','Вход','Стоп','Тейк','Выход','Причина','Издержки¹','Нетто на маржу'],report.fills.map(r=>[
+      new Date(r.entry_at_ms).toISOString().slice(5,16).replace('T',' '),r.symbol,r.direction,price(r.entry),price(r.stop_loss),
+      price(r.take_profit),price(r.exit),r.exit_reason,pct((r.fees+r.spread+r.slippage+r.funding)*100),pct(r.net_return*500)])),
+    el('p','','¹ На номинал позиции за вход и выход, включая спред, проскальзывание и funding.'));
+  const variants=el('details');
+  variants.append(el('summary','',`Все ${report.candidate_count} вариантов на отборе`),researchTable(
+    ['Модель','Вход','Порог отбора²','Фильтр','Сентябрь · сделки / доход','Октябрь · сделки / доход'],
+    report.comparison.map(c=>[names[c.name]||c.name,c.limit_depth?'Лимит от '+pct(c.limit_depth*100):'Рыночный',
+      pct(c.quantile*100),c.regime==='active'?'Объём и волатильность':'Все режимы',...c.periods.map(s=>s.trades+' / '+pct(s.return))])),
+    el('p','','² Процентиль оценки на августовских данных. Высокий процентиль означает редкость условия.'));
+  host.append(journal,variants,el('h3','','Предыдущая проверка ближайших аналогов'));
+}
+
 async function refreshAudit(){
   const host=$('audit-content');
   try{
     const response=await fetch('/api/signal-audit',{cache:'no-store',signal:AbortSignal.timeout(8000)});
     if(!response.ok)throw Error(response.status);const data=await response.json();host.replaceChildren();
     if(!data.test){host.append(el('p','',data.note||'Проверка ещё выполняется.'));return;}
+    if(data.research_challenge)renderChallenge(host,data.research_challenge);
     host.append(el('p','',`${data.period} · ${data.symbols.length} монет · плечо ${data.costs.leverage}×`));
     host.append(el('p',data.promotion_passed?'':'warning',data.promotion_passed?'Проверка пройдена; требуется дальнейшее наблюдение на новых данных.':'Вне обучения преимущество не подтверждено. Автоматические торговые сигналы заблокированы, условные планы остаются доступны.'));
     const table=el('table'),head=el('tr');for(const label of ['Стратегия','Сделок','Винрейт, нетто','Profit factor','Доход счёта','Просадка*'])head.append(el('th','',label));table.append(head);
