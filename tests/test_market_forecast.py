@@ -117,12 +117,12 @@ def test_recovered_quote_rearms_same_bar_only_once():
 def test_forward_observations_are_persisted_and_late_quotes_expire(candles):
     engine,card,now=setup_engine(candles)
     asyncio.run(engine.process(card))
-    assert engine.performance()["snapshots"]==3
+    assert engine.performance()["snapshots"]==len(HORIZONS)
     card["bbo"]["received_at_ms"]=now+300_000
     engine.resolve(card,now+300_000)
     assert engine.performance()["outcomes"]["OBSERVED"]==1
     engine.resolve(card,now+10_000_000)
-    assert engine.performance()["outcomes"]["UNAVAILABLE"]==2
+    assert engine.performance()["outcomes"]["UNAVAILABLE"]==len(HORIZONS)-1
     engine.storage.close()
 
 
@@ -156,7 +156,8 @@ async def test_website_horizon_selection_and_removed_miniapp(candles):
             assert response.status==200
             row=(await response.json())["forecasts"][0]
             assert row["horizon"]=="5m" and row["probabilities"]
-            assert (await client.get("/api/forecasts?horizon=2h")).status==400
+            assert (await client.get("/api/forecasts?horizon=2h")).status==200
+            assert (await client.get("/api/forecasts?horizon=7h")).status==400
             assert (await client.get("/app/")).status==404
             assert (await client.get("/api/v1/snapshot")).status==404
     engine.storage.close()

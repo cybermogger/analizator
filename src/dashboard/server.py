@@ -92,11 +92,12 @@ def snapshot(service: Any) -> dict[str, Any]:
             "realized_net": close.get("net_pnl"),
         })
     forecasts = getattr(service, "market_forecasts", None)
+    if forecasts and getattr(forecasts,'profit_policy',False):signals=[]
     estimates = forecasts.forecasts() if forecasts is not None else []
     return {"as_of_ms": now, "markets": cards, "signals": signals[:10], "events": events,
         "forecasts": estimates, "forecast_error": forecasts.last_error if forecasts else None,
         "forecast_performance": forecasts.performance() if forecasts else None,
-        "forecast_horizons": ["5m", "15m", "1h"],
+        "forecast_horizons": ["5m", "15m", "1h", "2h"],
         "candidates": candidates, "paper_journal": paper_journal,
         "paper_status": "NOT_EVALUABLE", "market_count": len(cards), "event_count": len(events),
         "semantics": "Наблюдение и экспериментальные гипотезы; рейтинг покрытия не является вероятностью прибыли."}
@@ -131,8 +132,8 @@ def create_dashboard_app(service: Any) -> web.Application:
     async def forecasts(request: web.Request) -> web.Response:
         engine = getattr(service, "market_forecasts", None)
         horizon = request.query.get("horizon", "15m")
-        if horizon not in ("5m", "15m", "1h"):
-            return web.json_response({"error": "Выберите горизонт 5m, 15m или 1h"}, status=400)
+        if horizon not in ("5m", "15m", "1h", "2h"):
+            return web.json_response({"error": "Выберите горизонт 5m, 15m, 1h или 2h"}, status=400)
         rows = engine.forecasts(horizon) if engine else []
         identity = request.query.get("instrument")
         if identity:
@@ -144,7 +145,8 @@ def create_dashboard_app(service: Any) -> web.Application:
     async def best(request: web.Request) -> web.Response:
         from .ranking import best_signal
         engine=getattr(service,'market_forecasts',None)
-        rows=[row for horizon in ('5m','15m','1h') for row in (engine.forecasts(horizon) if engine else [])]
+        horizons=('1h','2h') if engine and engine.profit_policy else ('5m','15m','1h')
+        rows=[row for horizon in horizons for row in (engine.forecasts(horizon) if engine else [])]
         response=web.json_response(best_signal(rows,int(time.time()*1000)))
         response.headers['Cache-Control']='no-store'
         return response
@@ -157,6 +159,13 @@ def create_dashboard_app(service: Any) -> web.Application:
         source=health.get('official_x',{})
         return web.json_response({'status':source.get('status','disabled'),'accounts':watchlist['accounts'],
             'note':'Список для мониторинга, не количественный рейтинг. Идентичность аккаунтов ещё требует проверки по числовым ID. Без X API поток не подключён.'})
+
+    async def signal_audit(request: web.Request) -> web.Response:
+        import json
+        path=ROOT.parent/'reports'/'signal-audit.json'
+        if not path.is_file():return web.json_response({'status':'PENDING','note':'Историческая проверка ещё выполняется.'})
+        report=json.loads(await asyncio.to_thread(path.read_text,encoding='utf-8'))
+        return web.json_response(report,headers={'Cache-Control':'no-store'})
 
     async def health(request: web.Request) -> web.Response:
         from collections import Counter
@@ -181,6 +190,7 @@ def create_dashboard_app(service: Any) -> web.Application:
     app.router.add_get('/api/best',best)
     app.router.add_get('/api/x-status',x_status)
     app.router.add_get('/api/health',health)
+    app.router.add_get('/api/signal-audit',signal_audit)
     return app
 
 

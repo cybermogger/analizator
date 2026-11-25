@@ -137,6 +137,8 @@ async def build_service(
 ) -> AnalyzerService:
     original, _ = load_config("config.yaml")
     config = copy.deepcopy(original)
+    # This fixture exercises the legacy paper notification path explicitly.
+    config['market_forecast']['profit_policy_enabled'] = False
     config["market"]["assets"] = ["SOL"]
     config["storage"]["sqlite_path"] = str(database or tmp_path / "cycle.db")
     config["storage"]["raw_path"] = str(tmp_path / "raw")

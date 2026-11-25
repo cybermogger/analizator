@@ -16,9 +16,15 @@ dashboard:
   port: 8081
 
 market_forecast:
+  profit_policy_enabled: true
+  require_historical_audit: true
+  leverage: 5
+  minimum_net_margin_profit_percent: 3
+  minimum_net_reward_risk: 2
+  maximum_net_margin_loss_percent: 5
   snapshot_cadence_seconds: 300
-  minimum_directional_percent: 60
-  fee_bps_per_side: 4
+  minimum_directional_percent: 45
+  fee_bps_per_side: 5
   slippage_bps_per_side: 2
   max_per_hour: 8
 

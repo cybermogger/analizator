@@ -492,7 +492,7 @@ class AnalyzerService:
                     strength=round(signal["signal_strength"], 1), regime=signal["regime"],
                     signal_event=signal["event"], model=signal["model_status"],
                 )
-                if decision and decision.send and send_telegram and self.config["alerts"]["enabled"]:
+                if decision and decision.send and send_telegram and self.config["alerts"]["enabled"] and not self.market_forecasts.profit_policy:
                     message = format_signal(signal)
                     delivery_key = self._delivery_key("signal", (
                         coin, str(decision.event), signal["direction"],
@@ -515,7 +515,7 @@ class AnalyzerService:
                         or paper_decision.terminal_state == "RETRACTED"
                     )
                 )
-                if paper_alert and send_telegram and self.config["alerts"]["enabled"]:
+                if paper_alert and send_telegram and self.config["alerts"]["enabled"] and not self.market_forecasts.profit_policy:
                     message = format_paper_recommendation(paper_decision.recommendation.as_dict())
                     delivery_key = self._delivery_key("paper", (
                         paper_decision.recommendation.decision_id,

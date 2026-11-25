@@ -9,6 +9,8 @@ import hashlib
 import json
 from datetime import datetime, timezone
 from typing import Any
+from pathlib import Path
+from src.research.signal_policy import ProfitPolicy, policy_labels
 
 import numpy as np
 import pandas as pd
@@ -17,13 +19,27 @@ from src.features.technical import add_technical_features
 from src.models.targets import triple_barrier_labels
 
 
-HORIZONS = {"5m": 1, "15m": 3, "1h": 12}
+HORIZONS = {"5m": 1, "15m": 3, "1h": 12, "2h": 24}
 
 
 class MarketForecastService:
     def __init__(self, analysis: Any, storage: Any, settings: dict | None = None, send_once=None):
         self.analysis, self.storage = analysis, storage
         self.cfg = settings or {}
+        self.profit_policy = bool(self.cfg.get('profit_policy_enabled',False))
+        self.minimum_directional_percent=float(self.cfg.get('minimum_directional_percent',45 if self.profit_policy else 60))
+        self.policy = ProfitPolicy(leverage=float(self.cfg.get('leverage',5)),
+            entry_fee=float(self.cfg.get('fee_bps_per_side',5))/10000,
+            exit_fee=float(self.cfg.get('fee_bps_per_side',5))/10000,
+            minimum_margin_profit=float(self.cfg.get('minimum_net_margin_profit_percent',3))/100,
+            minimum_net_reward_risk=float(self.cfg.get('minimum_net_reward_risk',2)),
+            maximum_margin_loss=float(self.cfg.get('maximum_net_margin_loss_percent',5))/100)
+        self.audit = {}
+        audit_path=Path(__file__).resolve().parents[2]/'reports'/'signal-audit.json'
+        if audit_path.is_file():self.audit=json.loads(audit_path.read_text(encoding='utf-8'))
+        fingerprint=hashlib.sha256(json.dumps({'policy':self.policy.__dict__,'threshold':self.minimum_directional_percent,
+            'decision_cadence_bars':3,'entry_ttl_seconds':60},sort_keys=True).encode()).hexdigest()[:12]
+        self.model_version='profit-neighbours-v2-'+fingerprint if self.profit_policy else 'empirical-barrier-neighbours-v1'
         self.send_once = send_once
         self.last_error: str | None = None
         storage.execute("""CREATE TABLE IF NOT EXISTS market_forecasts_v1(
@@ -59,7 +75,7 @@ class MarketForecastService:
             "market_type": card.get("market_type"), "quote": card.get("quote"),
             "horizon": horizon, "observed_at_ms": now, "probabilities": None,
             "status": "UNAVAILABLE", "direction": "WAIT", "eligible": False,
-            "model_version": "empirical-barrier-neighbours-v1", "calibrated": False,
+            "model_version": self.model_version, "calibrated": False,
             "semantics": "Эмпирическая оценка первого достижения ATR-барьера; не калиброванная вероятность прибыли.",
             "reasons": [], "sample_count": 0}
         quality = (card.get("candle_quality") or {}).get("5m", {})
@@ -91,12 +107,17 @@ class MarketForecastService:
                 "open": b.open, "high": b.high, "low": b.low, "close": b.close,
                 "volume": b.volume, "open_time": b.open_time_ms} for b in bars]))
             steps = HORIZONS[horizon]
-            labels = triple_barrier_labels(frame, steps, use_structure=False)
             features = frame[["return_1", "dist_ema_21", "rsi_14", "atr_pct", "relative_volume"]]
+            if self.profit_policy:
+                values,trade_returns=policy_labels(frame,features,steps,self.policy)
+                labels=pd.Series(values,index=frame.index)
+            else:
+                labels = triple_barrier_labels(frame, steps, use_structure=False)
             # Both labels and all normalization observations precede the current
             # decision. Exclude one additional horizon as an outcome embargo.
             historical = features.iloc[:-(2*steps+1)].dropna()
             historical = historical.loc[labels.loc[historical.index].notna()]
+            if self.profit_policy:historical=historical.loc[historical.index>=30]
             current = features.iloc[-1]
             if len(historical) < 60 or current.isna().any():
                 result["reasons"] = ["Недостаточно прошлых состояний с завершённым исходом"]
@@ -114,6 +135,16 @@ class MarketForecastService:
                 "source_close": float(frame.close.iloc[-1]),
                 "signal_anchor_ms": bars[-1].open_time_ms,
                 "source_received_at_ms": bars[-1].metadata.received_at_ms}
+            if self.profit_policy:
+                self._cache[key]['historical_trade_net_long']=float(trade_returns[nearest,0].mean())
+                self._cache[key]['historical_trade_net_short']=float(trade_returns[nearest,1].mean())
+                last=frame.iloc[-1]
+                self._cache[key]['policy_trend']={side:bool(sign*(last.close/last.ema_50-1)>0
+                    and sign*(last.rsi_14-50)>=2 and last.relative_volume>=1)
+                    for side,sign in [('LONG',1),('SHORT',-1)]}
+                self._cache[key]['policy_breakout']={
+                    'LONG':bool(last.close>frame.high.iloc[-21:-1].max()),
+                    'SHORT':bool(last.close<frame.low.iloc[-21:-1].min())}
             if len(self._cache) > 500:
                 self._cache.pop(next(iter(self._cache)))
         result.update(self._cache[key])
@@ -131,14 +162,22 @@ class MarketForecastService:
         spread = float(bbo.get("spread_bps") or 0)
         costs = (2*float(self.cfg.get("fee_bps_per_side", 4))+2*float(self.cfg.get("slippage_bps_per_side", 2))+spread)/10_000
         net = result["historical_mean_return"]*(1 if direction=="LONG" else -1)-costs
+        if self.profit_policy:
+            if spread>self.policy.spread*10000:result['reasons'].append('Спред выше допущения исторической проверки')
+            funding=card.get('funding') or {}
+            if funding.get('status')!='FRESH':result['reasons'].append('Нет свежей ставки funding для расчёта расходов')
+            elif abs(float(funding.get('rate') or 0))>self.policy.funding_reserve:result['reasons'].append('Funding превышает проверенный резерв расходов')
+            costs=self.policy.cost
+            net=result['historical_trade_net_long' if direction=='LONG' else 'historical_trade_net_short']
+            result['semantics']='Эмпирическая оценка TP до SL в пределах горизонта; WAIT включает стопы и истечение времени. Не калиброванная вероятность прибыли.'
         result.update(historical_directional_net_return=net, cost_fraction=costs, spread_bps=spread,
             rank_score=max(p["LONG"],p["SHORT"])-p["WAIT"])
         result["reference_mid"] = (bid+ask)/2 if fresh else None
         result["quote_received_at_ms"] = received if fresh else None
-        if direction == "WAIT": result["reasons"].append("Нейтральный исход преобладает")
+        if direction == "WAIT": result["reasons"].append("TP до стопа не подтверждён" if self.profit_policy else "Нейтральный исход преобладает")
         if direction == "SHORT" and card.get("market_type") != "perpetual":
             result["reasons"].append("SHORT доступен только на фьючерсах")
-        if max(p["LONG"],p["SHORT"]) < float(self.cfg.get("minimum_directional_percent", 60)):
+        if max(p["LONG"],p["SHORT"]) < self.minimum_directional_percent:
             result["reasons"].append("Оценка направления ниже порога")
         if abs(p["LONG"]-p["SHORT"]) < 20: result["reasons"].append("Малое преимущество направления")
         if spread > 20: result["reasons"].append("Слишком широкий спред")
@@ -166,6 +205,36 @@ class MarketForecastService:
                 'instrument_id': iid, 'quote': card.get('quote'),
                 'basis': '1.25 ATR, matching the forecast barriers',
             }
+            if self.profit_policy:
+                plan=self.policy.plan(entry,result['atr_pct'],plan_direction)
+                result['expires_at_ms']=min(result['expires_at_ms'],bars[-1].close_time_ms+60_000)
+                plan.update(expires_at_ms=result['expires_at_ms'],time_exit_at_ms=bars[-1].close_time_ms+HORIZONS[horizon]*300_000,
+                    quote_received_at_ms=received,instrument_id=iid,quote=card.get('quote'))
+                result['trade_plan']=plan
+                result.update(stop=plan['stop_loss'],target=plan['take_profit'])
+                if not plan['risk_allowed']:result['reasons'].append('Стоп превышает лимит потерь на маржу')
+        if self.profit_policy:
+            if result['signal_anchor_ms']%900_000:result['reasons'].append('Решение по стратегии каждые 15 минут; мониторинг продолжается каждые 5 минут')
+            if now>bars[-1].close_time_ms+60_000:result['reasons'].append('Окно входа после закрытия свечи истекло')
+            if horizon not in ('1h','2h'):result['reasons'].append('Короткий горизонт — только контекст; торговые планы проверяются на 1h/2h')
+            if card.get('provider')!='binance' or card.get('venue')!='binance-usdm' or card.get('quote')!='USDT':
+                result['reasons'].append('Этот рынок ещё не прошёл проверку комиссии и истории исполнения')
+            if self.cfg.get('require_historical_audit',True):
+                if not self.audit.get('promotion_passed'):result['reasons'].append('Историческая проверка вне обучения не пройдена; только условный план')
+                else:
+                    profile=self.audit.get('selected_profile','')
+                    if self.audit.get('costs')!=self.policy.__dict__:result['reasons'].append('Параметры плеча и издержек изменились после проверки')
+                    if self.minimum_directional_percent!=self.audit.get('minimum_directional_percent'):
+                        result['reasons'].append('Порог оценки изменился после проверки')
+                    if not profile.endswith(horizon) or str(card.get('base'))+'USDT' not in self.audit.get('symbols',[]):
+                        result['reasons'].append('Горизонт или монета вне проверенной выборки')
+                    if profile.startswith(('trend','breakout')):
+                        sign=1 if direction=='LONG' else -1
+                        # Conditions are cached with the immutable candle state.
+                        trend=self._cache[key].get('policy_trend',{})
+                        if not trend.get(direction,False):result['reasons'].append('Фильтр подтверждённой стратегии не выполнен')
+                        if profile.startswith('breakout') and not self._cache[key].get('policy_breakout',{}).get(direction,False):
+                            result['reasons'].append('Пробой диапазона не подтверждён')
         result["eligible"] = not result["reasons"]
         if result.get('trade_plan'):
             result['trade_plan']['status'] = 'SIGNAL' if result['eligible'] else 'CONDITIONAL'
@@ -252,8 +321,9 @@ class MarketForecastService:
         p=f["probabilities"]
         return (f"🧪 Сильный экспериментальный сетап · {f['instrument_id']} · {f['horizon']}\n"
             f"{f['direction']} · LONG {p['LONG']:.0f}% / SHORT {p['SHORT']:.0f}% / WAIT {p['WAIT']:.0f}%\n"
-            f"Вход-ориентир {f['entry_reference']:.8g}; стоп-лосс {f['stop']:.8g}; тейк-профит {f['target']:.8g} {f.get('quote','')}.\n"
-            f"Риск/прибыль 1:1 до расходов. Вход действителен до {datetime.fromtimestamp(f['expires_at_ms']/1000,timezone.utc):%H:%M:%S} UTC; горизонт {f['horizon']}.\n"
+            f"Вход-ориентир {f['entry_reference']:.8g}; стоп-лосс {f['stop']:.8g}; тейк-профит {f['target']:.8g} {f.get('quote','')}.\n"+
+            (f"Плечо {f['trade_plan']['leverage']:.0f}× · цель на маржу после расходов +{f['trade_plan']['target_net_margin_percent']:.2f}% · стоп −{f['trade_plan']['stop_net_margin_percent']:.2f}%.\n" if f.get('trade_plan',{}).get('leverage') else '')+
+            f"Вход действителен до {datetime.fromtimestamp(f['expires_at_ms']/1000,timezone.utc):%H:%M:%S} UTC; горизонт {f['horizon']}.\n"
             f"Исторических аналогов: {f['sample_count']}; расходы {f['cost_fraction']*100:.3f}%.\n"
             "Оценка не калибрована; преимущество на будущих данных не подтверждено. TTL котировки до 30 секунд. Ордер не отправлен.")
 
@@ -261,7 +331,7 @@ class MarketForecastService:
         if self.send_once is None: return
         key=f"digest:{now//3_600_000}"
         if not self._claim(key,now): return
-        rows=self.forecasts("15m")
+        rows=sorted(self.forecasts('1h')+self.forecasts('2h'),key=lambda row:-row.get('rank_score',-100)) if self.profit_policy else self.forecasts('15m')
         lines=["📊 Часовой обзор рынка · эмпирические оценки, не проверенные вероятности"]
         # Symbol grouping is presentation only; exact IDs remain on every line.
         seen=set()

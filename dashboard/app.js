@@ -24,6 +24,10 @@ function tradePlan(f) {
     const cell=el('div');cell.append(el('dt','',label),el('dd','',price(value)));levels.append(cell);
   }
   box.append(levels,el('p','',`${plan.quote} · риск ${plan.stop_distance_percent.toFixed(2)}% · цель +${plan.target_distance_percent.toFixed(2)}% · прибыль/риск ${plan.reward_risk.toFixed(2)}`));
+  if(plan.leverage){
+    box.append(el('p','plan-roi',`Плечо ${plan.leverage}× · цель на маржу +${plan.target_net_margin_percent.toFixed(2)}% чистыми · стоп −${plan.stop_net_margin_percent.toFixed(2)}%`));
+    box.append(el('small','','Движение цены и доходность маржи — разные величины. Цель не гарантирована; плечо увеличивает и убыток.'));
+  }
   box.append(el('p','',`С учётом расходов: ${plan.reward_risk_after_costs.toFixed(2)} · расходы ≈ ${plan.estimated_roundtrip_cost_percent.toFixed(2)}%`));
   box.append(el('p',`plan-expiry ${valid?'':'warning'}`,valid?`Вход до ${new Date(plan.expires_at_ms).toLocaleTimeString('ru-RU')} · горизонт ${f.horizon}`:'Котировка устарела — дождитесь обновления входа.'));
   if(plan.status!=='SIGNAL')box.append(el('small','','Условия входа не выполнены. Уровни показаны для сценария, торгового сигнала нет.'));
@@ -165,7 +169,7 @@ function brief(f, actionable) {
   if (actionable) return ['candidate','Кандидат '+f.direction,'Условия фильтров выполнены'];
   if (!f.probabilities) return ['warming',f.data_reason === 'latest_closed_candle_interval_is_old' ? 'Обновляем свечи' : 'Собираем историю',`${f.history_count || 0} закрытых свечей · нужно 160`];
   if ((f.reasons || []).some(r=>r.includes('котировки') || r.includes('Источник'))) return ['warming','Обновляем котировку','Оценка есть, свежие условия входа пока недоступны'];
-  if (f.direction === 'WAIT') return ['neutral','Нейтральный сценарий','Пока нет выраженного преимущества'];
+  if (f.direction === 'WAIT') return ['neutral','Ждём условия для сделки','TP до стопа в заданный срок не подтверждён'];
   if (f.direction === 'SHORT' && f.market_type === 'spot') return ['neutral','Медвежий уклон','Для SHORT выбери фьючерсный инструмент'];
   return ['neutral',f.direction === 'LONG' ? 'Бычий уклон' : 'Медвежий уклон','Для входа пока недостаточно подтверждений'];
 }
@@ -295,6 +299,25 @@ async function refreshX(){
     const host=$('x-accounts');host.replaceChildren();for(const account of data.accounts){const link=el('a','x-account','@'+account.handle);link.href=account.profile_url;link.target='_blank';link.rel='noopener noreferrer';link.append(el('small','',account.category));host.append(link);}
   }catch{$('x-state').textContent='Не удалось проверить подключение X.';}
 }
-function changeWorkspace(value){workspaceTab=value;document.querySelectorAll('[data-tab]').forEach(button=>button.setAttribute('aria-selected',String(button.dataset.tab===value)));document.querySelectorAll('main > section').forEach(section=>{section.hidden=value==='market'?['best-panel','x-panel'].includes(section.id):section.id!==(value==='best'?'best-panel':'x-panel');});if(value==='best')refreshBest();if(value==='x')refreshX();}
+async function refreshAudit(){
+  const host=$('audit-content');
+  try{
+    const response=await fetch('/api/signal-audit',{cache:'no-store',signal:AbortSignal.timeout(8000)});
+    if(!response.ok)throw Error(response.status);const data=await response.json();host.replaceChildren();
+    if(!data.test){host.append(el('p','',data.note||'Проверка ещё выполняется.'));return;}
+    host.append(el('p','',`${data.period} · ${data.symbols.length} монет · плечо ${data.costs.leverage}×`));
+    host.append(el('p',data.promotion_passed?'':'warning',data.promotion_passed?'Проверка пройдена; требуется дальнейшее наблюдение на новых данных.':'Вне обучения преимущество не подтверждено. Автоматические торговые сигналы заблокированы, условные планы остаются доступны.'));
+    const table=el('table'),head=el('tr');for(const label of ['Стратегия','Сделок','Винрейт, нетто','Profit factor','Доход счёта','Просадка*'])head.append(el('th','',label));table.append(head);
+    const number=(value,digits=2)=>value==null?'—':Number(value).toFixed(digits);
+    for(const [name,row]of Object.entries(data.test)){
+      const tr=el('tr');for(const value of [name,row.trades,number(row.net_winrate_percent)+'%',number(row.profit_factor),number(row.net_equity_return_percent)+'%',number(row.max_closed_equity_drawdown_percent)+'%'])tr.append(el('td','',value));table.append(tr);
+    }
+    const scroll=el('div','table-scroll');scroll.append(table);host.append(scroll);
+    const stress=data.test_double_costs[data.selected_profile];host.append(el('p','',`Выбран по сентябрю: ${data.selected_profile}. Октябрь не использовался для выбора. Удвоенные расходы: ${number(stress.net_equity_return_percent)}% счёта.`));
+    host.append(el('p','','* Просадка по закрытым сделкам; плавающая просадка может быть выше. Максимум 4 позиции, риск 0,25% счёта на сделку. Это симуляция, не результат реальной торговли.'));
+    const details=el('details');details.append(el('summary','','Допущения и ограничения'));for(const assumption of data.assumptions)details.append(el('p','',assumption));host.append(details);
+  }catch{host.replaceChildren(el('p','warning','Не удалось загрузить историческую проверку.'));}
+}
+function changeWorkspace(value){workspaceTab=value;document.querySelectorAll('[data-tab]').forEach(button=>button.setAttribute('aria-selected',String(button.dataset.tab===value)));const panels={best:'best-panel',x:'x-panel',audit:'audit-panel'};document.querySelectorAll('main > section').forEach(section=>{section.hidden=value==='market'?Object.values(panels).includes(section.id):section.id!==panels[value];});if(value==='best')refreshBest();if(value==='x')refreshX();if(value==='audit')refreshAudit();}
 document.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>changeWorkspace(button.dataset.tab)));
 document.querySelectorAll('.nav-link').forEach(link=>link.addEventListener('click',()=>changeWorkspace('market')));
