@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import time
+import asyncio
+import json
 from typing import Any, Mapping, Sequence
 
 from .base import DerivativesDataProvider, ProviderCapabilityError
@@ -47,13 +49,14 @@ class BinanceProvider(ProviderRuntime, DerivativesDataProvider):
 
     async def discover_catalog(self) -> Sequence[MarketCatalogScope]:
         scopes: list[MarketCatalogScope] = []
-        for market_type, client, venue, prefix, info_path, ticker_path in (
+        groups = (
             (MarketType.SPOT, self.spot, "binance-spot", "/api/v3", "exchangeInfo", "ticker/24hr"),
             (MarketType.PERPETUAL, self.futures, "binance-usdm", "/fapi/v1", "exchangeInfo", "ticker/24hr"),
-        ):
+        )
+        async def discover(market_type, client, venue, prefix, info_path, ticker_path):
             scope = market_type.value
             try:
-                info, received = await client.get_json(f"{prefix}/{info_path}")
+                info, received = await client.get_json(f"{prefix}/{info_path}", {"showPermissionSets": "false"} if market_type == MarketType.SPOT else None)
                 self._success(received)
                 ticker_rows, ticker_received = await client.get_json(f"{prefix}/{ticker_path}")
                 received = max(received, ticker_received)
@@ -151,6 +154,7 @@ class BinanceProvider(ProviderRuntime, DerivativesDataProvider):
                     self.provider_id, scope, f"{client.base_url}{prefix}/{info_path}+{ticker_path}",
                     now_ms(), (), False, 1, f"{type(exc).__name__}: {exc}"[:300],
                 ))
+        await asyncio.gather(*(discover(*group) for group in groups))
         return tuple(scopes)
 
     async def refresh_bbo_batch(self, instruments: Sequence[Instrument]) -> Sequence[NormalizedBBO]:
@@ -159,12 +163,12 @@ class BinanceProvider(ProviderRuntime, DerivativesDataProvider):
             (MarketType.SPOT, self.spot, "/api/v3", "binance-spot"),
             (MarketType.PERPETUAL, self.futures, "/fapi/v1", "binance-usdm"),
         )
-        for market_type, client, prefix, venue in groups:
+        async def fetch_group(market_type, client, prefix, venue):
             requested = [item for item in instruments if item.market_type == market_type and item.provider == self.provider_id]
             if not requested:
-                continue
+                return
             try:
-                payload, received = await client.get_json(f"{prefix}/ticker/bookTicker")
+                payload, received = await client.get_json(f"{prefix}/ticker/bookTicker", {"symbols": json.dumps([item.venue_symbol for item in requested], ensure_ascii=False, separators=(",", ":"))} if market_type == MarketType.SPOT else None)
                 rows = {str(item["symbol"]): item for item in require_sequence(payload, "Binance book tickers")
                         if isinstance(item, Mapping) and item.get("symbol")}
                 for instrument in requested:
@@ -192,6 +196,7 @@ class BinanceProvider(ProviderRuntime, DerivativesDataProvider):
                 self._success(received)
             except Exception as exc:
                 self._failure(exc)
+        await asyncio.gather(*(fetch_group(*group) for group in groups))
         return tuple(result)
 
     def _client(self, instrument: Instrument) -> tuple[PublicHTTPClient, str]:

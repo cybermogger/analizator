@@ -83,7 +83,11 @@ class HyperliquidProvider(ProviderRuntime, DerivativesDataProvider):
     ) -> list[NormalizedCandle]:
         self._check(instrument)
         end = now_ms()
-        start = int(start_ms if start_ms is not None else end - max(1, int(limit)) * 60_000)
+        unit_ms = {"m": 60_000, "h": 3_600_000, "d": 86_400_000, "w": 604_800_000}
+        if not interval[:-1].isdigit() or interval[-1:] not in unit_ms:
+            raise ValueError(f"unsupported Hyperliquid candle interval: {interval}")
+        duration_ms = int(interval[:-1]) * unit_ms[interval[-1]]
+        start = int(start_ms if start_ms is not None else end - (max(1, int(limit)) + 1) * duration_ms)
         try:
             async with self._rest() as rest:
                 candles = await rest.candles(instrument.venue_symbol, interval, start, end)

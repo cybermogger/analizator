@@ -821,7 +821,11 @@ def test_normal_refresh_keeps_thirty_market_outcomes_through_four_hours(tmp_path
         book = NormalizedL2(meta, (NormalizedBookLevel(100.0, 20.0),), (NormalizedBookLevel(100.1, 21.0),))
         pairs.append((instrument, provider, bbo, book))
     data = MarketData(pairs)
-    storage = SQLiteStorage(tmp_path / "normal-four-hour.db")
+    # This fake-time stress test checks scheduling, bounded requests, and outcome
+    # accounting, not disk durability (covered by migration/restore tests).
+    # In-memory SQLite avoids thousands of Windows filesystem flushes under a
+    # 30-second test deadline without removing SQL constraints or assertions.
+    storage = SQLiteStorage(":memory:")
     repository = MarketRepository(storage)
     service = MultiAssetAnalysisService(data, {}, repository)
     service._now_ms = clock.now

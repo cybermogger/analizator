@@ -103,6 +103,8 @@ def enrich_signal_quality(
     component_quality = []
     for value in component_values.values():
         quality = float(np.clip(_finite(value.get("quality")), 0.0, 1.0))
+        if float(value.get("effective_weight", 1.0)) <= 0:
+            continue
         component_quality.append(quality)
         probabilities = value.get("probabilities", {})
         if quality >= 0.2 and probabilities:

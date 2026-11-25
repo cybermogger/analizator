@@ -2,7 +2,7 @@
 
 Production-oriented, read-only 24/7 analyzer. The established **SOL/HYPE signal and ML pipeline remains Hyperliquid-based and unchanged**. Multi-venue prices, Event Intelligence, and the separate on-chain candidate pipeline are diagnostic context; none is an input to the current trading models. A separate experimental spot setup alert now covers eligible instruments beyond SOL/HYPE, including liquid exchange-listed memecoins, under strict freshness and daily/hourly caps; it is not a calibrated probability or a proven edge.
 
-The standalone local dashboard is available at `http://127.0.0.1:8081` when the daemon runs. It shows up to 30 exact market instruments, fresh experimental setup plans, a bounded virtual paper journal with confirmed closed net results, source-linked events and on-chain candidates. It binds to loopback only and is separate from the Telegram Mini App. Telegram can additionally report newly discovered official CEX spot pairs after a persisted first catalog baseline, clearly distinguished from a new token launch. See [Phase 09](docs/phases/09-expanded-alerts-dashboard.md) for eligibility, news/new-token reports and current deployment limits.
+The standalone local dashboard is available at `http://127.0.0.1:8081` when the daemon runs. It shows up to 30 exact market instruments, fresh experimental setup plans, a bounded virtual paper journal with confirmed closed net results, source-linked events and on-chain candidates. It binds to loopback only and is the primary web interface. Telegram can additionally report newly discovered official CEX spot pairs after a persisted first catalog baseline, clearly distinguished from a new token launch. See [Phase 09](docs/phases/09-expanded-alerts-dashboard.md) for eligibility, news/new-token reports and current deployment limits.
 
 The service never places orders and never asks for a wallet, private key, seed phrase, or Hyperliquid API wallet. Telegram and optional read-only feed credentials are environment-only.
 
@@ -92,7 +92,7 @@ Official references: [Solana `getTransaction`](https://solana.com/docs/rpc/http/
 - Quality-aware ensemble: technical, structure, derivatives, order book, trade flow, statistical, ML, and BTC context. Missing components receive zero effective weight. An ML artifact below the configured OOS thresholds is not loaded.
 - Event-driven Telegram gate: directional gap, confidence, WAIT, timeframe/component agreement, freshness, consecutive confirmation, intelligent cooldown, and deduplication against prior SQLite state. Fast breakout/breakdown, volatility, order-flow, and BTC shocks have separate high-confidence gates.
 - Every snapshot stores confidence, signal strength, ATR/volatility/historical-distribution range, S/R-derived targets and invalidation, component probabilities/weights, freshness, and alert decision. Mature snapshots are evaluated automatically for Brier, calibration, directional/balanced accuracy, class precision, forward returns, regime, and probability buckets.
-- Telegram commands: `/app`, `/status`, `/sol`, `/hype`, `/signals`, `/watchlist`, `/markets`, `/analyze`, `/analysis_status`, `/analysis_performance`, `/opportunities`, `/events`, `/asset`, `/onchain`, `/paper`, `/performance`, `/sources`, `/health`, `/help`.
+- Telegram commands: `/site`, `/status`, `/sol`, `/hype`, `/signals`, `/watchlist`, `/markets`, `/analyze`, `/analysis_status`, `/analysis_performance`, `/opportunities`, `/events`, `/asset`, `/onchain`, `/paper`, `/performance`, `/sources`, `/health`, `/help`.
 - Resilience: REST timeouts/retries/backoff/rate-limit retry, WebSocket reconnect/backoff, REST L2 fallback, per-asset error isolation, rotating JSON logs, SQLite WAL, health logging, and Docker restart policy.
 
 “Premium”, delta, positioning state, POC/HVN/LVN, OBV, and aggressive flow are explicitly treated as computed features or **proxies**, not fields invented as exchange facts. If an official field or enough history is unavailable, its component quality becomes zero and the UI shows `MODEL_WARMING_UP`.
@@ -115,8 +115,6 @@ src/paper/                     manual recommendations, risk gates, append-only s
 src/features/                  independent causal feature engines
 src/models/                    rules, targets, calibration, ML, ensemble
 src/alerts/                    gate, Russian formatter, Telegram client
-src/webapp/                    signed Telegram initData auth, read-only API, async server
-webapp/                         Russian mobile-first Telegram Mini App
 src/service/                   analyzer, scheduler, health, logging
 tests/                         offline fixtures and unit/integration tests
 ```
@@ -160,23 +158,35 @@ STRICT_ALERT_MODE=false
 
 `.env` is ignored by Git and is never copied into source code.
 
-## 3. Telegram Mini App
+## 3. Local website
 
-The read-only Mini App is served by the same async Python service at `/app/`; it reads the live in-memory service state plus existing signal/event/on-chain/paper repositories through `GET /api/v1/snapshot`. Private API data requires a valid Telegram `initData` HMAC, a recent `auth_date` (five minutes by default), and an explicit numeric user-ID allowlist. The browser sends the raw `Telegram.WebApp.initData`; the server verifies it with `TELEGRAM_BOT_TOKEN`. The page never trusts `initDataUnsafe`. Telegram's official validation rules are documented at [Telegram Mini Apps: validating data received via the Mini App](https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app).
+Start `python bot.py`, then open `http://127.0.0.1:8081/` on the same computer.
+The website is the only web interface. Telegram remains a notification and command bot.
+Use coin search, exact venue selection, and the 5m / 15m / 1h selector to inspect
+LONG / SHORT / WAIT estimates even when no alert qualifies. `/site` returns the address.
 
-Set these values in the operator-managed `.env` (do not commit it):
+Wide-market estimates use closed 5m candles and embargoed historical neighbours with
+the same first-ATR-barrier labels across horizons. They are **uncalibrated empirical
+estimates**, not the accepted SOL/HYPE ML artifacts or a proven trading edge.
+Fresh quotes, spread, historical movement after modeled fees/slippage, and directional
+separation gate immediate experimental notifications (up to eight per rolling hour,
+15-minute instrument cooldown). A persisted hourly digest lists up to five different
+symbols and their rejection reasons. SHORT setups require a perpetual instrument.
+Snapshots and bounded forward quote outcomes are append-only; outcomes are not trade
+PnL or independent samples. Futures funding/impact are not included, so cost estimates
+are incomplete and broad forecasts cannot be promoted as validated production models.
 
-```dotenv
-TELEGRAM_MINI_APP_URL=https://<your-owned-domain>/app/
-TELEGRAM_MINI_APP_ALLOWED_USER_IDS=<numeric-telegram-user-id>[,<another-id>]
-MINI_APP_PORT=8080
-```
+The scanner retains 150 exact instruments and deeply analyzes up to 30, reserving
+18 derivative and eight spot slots with symbol diversity. This is not universal
+coverage of every exchange or every asset. The site lists the currently covered markets.
+About 25 hours of recent 5m history can be backfilled; waiting for a missing trained
+model does not train one. Legacy SOL/HYPE probabilities remain separately available
+via `/sol` and `/hype`; their ensemble percentages are not advertised as calibrated.
 
-The URL must be the real public HTTPS URL for the domain you control; this project does not invent or register a domain. Configure that domain with Telegram/BotFather as required for your bot and terminate TLS in a reverse proxy that forwards to `127.0.0.1:${MINI_APP_PORT:-8080}`. Compose publishes the app on loopback only. The app route has no independent HTTPS certificate or public hostname. After TLS, DNS, and Telegram domain setup are live, open the bot in a private Telegram chat and send `/app`; it replies with a `web_app` button. With no valid public URL it gives setup instructions and sends no launch button.
-
-For a local static preview without starting analysis workers, run `python -m http.server 8080 --bind 127.0.0.1 --directory webapp` from the project root, then open `http://127.0.0.1:8080/` in a browser. It shows the real shell and a clear “open through Telegram” authorization gate; no sample or synthetic market values are supplied. This static preview has no private API. In deployment, the same page is served at `/app/` by the analyzer. Use browser responsive/device mode to inspect the mobile layout; desktop uses the same five sections and persistent navigation.
-
-Only allowlist user IDs that should see the complete saved signal, event, on-chain and shadow portfolio data. Telegram `initData` is sent in an HTTPS same-origin Authorization header and is never logged or returned by the API. The response disables caching; external event descriptions are rendered as text. This interface contains no order, wallet, signing, or transaction endpoints and does not change the analysis models.
+Temporary shadow-data failures can be reassessed within the same closed bar, while
+already proposed plans remain idempotent. No orders, keys or wallets are introduced.
+The website binds to loopback. Internet hosting requires a separate authenticated
+deployment; no public deployment is performed by this change.
 
 ## 4. Run offline tests
 
@@ -455,3 +465,56 @@ The persistent host directories survive `docker compose down` and image rebuilds
 Read [architecture](docs/architecture.md), the [official source and cost matrix](docs/source-cost-matrix.md), and the [operations runbook](docs/operations-runbook.md) before enabling a deployment. The runbook defines stop conditions, retention, incident capture, and backup/restore steps. SQLite schema migrations are additive; the current schema is v12. A backup is made with SQLite's online backup API and verified using both integrity and foreign-key checks before it may be used for restore.
 
 Before each deployment, take a verified database snapshot, run `python bot.py --smoke-test` (bounded public read-only endpoints), inspect `python status.py`, and start with `docker compose up -d --build` only when source coverage, database integrity, paper reconciliation, and configured shadow mode are acceptable. Stop the service on stale/contradictory feeds, unexplained delivery claims, accounting or migration errors, repeated false-alert threshold breach, or calibrated-model drift. Keep Phase 4 challenger `NOT_EVALUABLE`; do not claim profitability from fixtures or a short shadow run. X/GitHub, RPC enrichment and LLM extraction remain disabled unless their documented configuration and access are separately available. The active source costs are public/no-key; VPS/egress and external API plan costs are deployment-dependent and no paid source is enabled.
+
+
+## Terminal update: grouping, leaders, Russian news and X
+
+The overview groups cards by displayed ticker only and lets the user select the
+exact venue/market/quote inside each card. This is presentation, not asset identity
+resolution; all forecasts and evidence retain exact instrument IDs.
+`/api/best` ranks the maximum LONG/SHORT estimate across fresh instruments and
+5m/15m/1h horizons. WAIT and entry filters remain visible; the leader can be ineligible.
+
+News is translated locally with Helsinki-NLP OPUS-MT EN→RU (Apache-2.0), converted
+to CTranslate2 int8. Original evidence is preserved and translation never changes
+trading inputs. Install dependencies and run `python setup_translation.py` once;
+weights are downloaded from the model author's public OPUS archive and are not
+included in source archives. The UI labels machine translations and exposes the
+original. Missing model/translation is explicit rather than fabricated Russian text.
+Model: https://huggingface.co/Helsinki-NLP/opus-mt-en-ru
+Runtime: https://opennmt.net/CTranslate2/guides/opus_mt.html
+
+`config/x_watchlist.json` contains 100 curated historical monitoring candidates,
+not a measured influence ranking or verified identity registry. Handles may change;
+numeric IDs must be independently verified before marking posts authentic.
+The X source is enabled but fails closed without `X_BEARER_TOKEN`. Set this only
+locally with an appropriate X API plan. `python setup_x_rules.py` prints proposed
+rules without network access; `--apply` adds missing rules through the official
+API, preserving existing unrelated rules. No scraping or access bypass is used.
+X's official filtered-stream sample: https://github.com/xdevplatform/samples/blob/main/python/streams/stream_posts_filtered.py
+
+### Устойчивое обновление и уровни сигнала
+Каталоги бирж, свежие котировки и углублённые стаканы обновляются раздельно. Для котировок зарезервирован сетевой слот; сбой каталога повторяется через минуту только для проблемной биржи. История активного инструмента сохраняется в ограниченном кэше при временном выпадении из обзора. Полная проверка SQLite оставлена для отдельной диагностики, регулярный heartbeat не сканирует все страницы базы.
+
+Каждая оценка со свежей котировкой содержит trade_plan: направление, вход по ask/bid точного рынка, стоп-лосс, тейк-профит, расстояния, отношение прибыли к риску до/после расчётных издержек и срок действия входа. Симметричные уровни 1.25 ATR соответствуют барьерам модели. Условный план не является допущенным сигналом; истёкшая котировка блокирует вход. Отправка ордеров отсутствует.
+
+
+### Проверка сигналов и цель на маржу
+
+Результат исследования находится в `reports/signal-audit-ru.md`, полный протокол и SHA256 архивов — в `reports/signal-audit.json`. На сайте добавлена вкладка «Проверка сигналов». Выбор стратегии выполняется на сентябре 2026, октябрь не используется для выбора. Это воспроизведение свечной логики с допущениями исполнения, а не точный replay старых уведомлений без исторических стаканов.
+
+Новый режим (`market_forecast.profit_policy_enabled`) показывает плечо 5x, целевую чистую доходность маржи от 3%, минимум 2:1 прибыли к риску после расходов и максимум 5% планового убытка маржи по стопу. Это не цель 3% движения монеты и не обещанная прибыль счёта. Для торговли рассматриваются 1h/2h, 5m/15m остаются контекстом. Проценты относятся к достижению TP до SL, WAIT включает стопы и выход по времени. Старые микроцелевые уведомления отключены.
+
+Текущий вариант не прошёл проверку вне обучения. Поэтому `require_historical_audit: true` блокирует его торговые уведомления, сохраняя условные планы. Неподтверждённый вариант не выдаётся за прибыльную стратегию. Изменение плеча, расходов или порога отменяет применимость допуска. Реальные ордера отсутствуют.
+
+Воспроизведение на Windows (curl.exe, Python 3.12):
+
+```powershell
+# Для каждого символа из SYMBOLS в src/research/signal_audit.py:
+.venv/Scripts/python.exe -m src.research.signal_audit fetch --symbol BTCUSDT --data ../public_research_2026
+.venv/Scripts/python.exe -m src.research.signal_audit replay --symbol BTCUSDT --data ../public_research_2026
+# После обработки всех 12 символов:
+.venv/Scripts/python.exe -m src.research.signal_audit aggregate --data ../public_research_2026 --report ../../outputs/signal-audit.json
+```
+
+Исторические данные исследования хранятся отдельно от рабочей базы. Скрипт не читает рабочие базы, логи или ключи. Загрузка проверяет официальный SHA256 каждого ZIP; HTTP byte ranges позволяют получать архивы при нестабильной сети. В отчёте явно указаны смещение выживших, допущения ликвидности, funding и просадка по закрытому балансу.

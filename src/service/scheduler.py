@@ -55,7 +55,6 @@ async def run_daemon(service: AnalyzerService) -> None:
     log = structlog.get_logger("scheduler")
     runtime_heartbeat = heartbeat_path(service.config["storage"]["sqlite_path"])
     write_heartbeat(runtime_heartbeat, "starting", service)
-    mini_app_runner = None
     dashboard_runner = None
     dashboard_settings = service.config.get("dashboard", {})
     if dashboard_settings.get("enabled", False):
@@ -65,15 +64,6 @@ async def run_daemon(service: AnalyzerService) -> None:
             log.info("local_dashboard_started", host=dashboard_settings.get("host"), port=dashboard_settings.get("port"))
         except Exception as exc:
             log.error("local_dashboard_unavailable", error=safe_exception(exc, 300))
-    mini_app_settings = service.config.get("mini_app", {})
-    if mini_app_settings.get("enabled", True):
-        try:
-            from src.webapp.server import start_mini_app
-
-            mini_app_runner = await start_mini_app(service, mini_app_settings)
-            log.info("telegram_mini_app_started", host=mini_app_settings.get("host"), port=mini_app_settings.get("port"))
-        except Exception as exc:
-            log.error("telegram_mini_app_unavailable", error=safe_exception(exc, 300))
     ws_task = asyncio.create_task(service.websocket.run_forever(), name="hyperliquid-websocket")
     multi_venue_task = asyncio.create_task(service.market_data.run_forever(), name="multi-venue-market-data")
     event_task = asyncio.create_task(service.events.run_forever(), name="event-intelligence")
@@ -111,6 +101,14 @@ async def run_daemon(service: AnalyzerService) -> None:
             except OSError as exc:
                 log.error("heartbeat_write_failed", path=str(runtime_heartbeat), error=safe_exception(exc))
             now = time.monotonic()
+            forecasts = getattr(service, "market_forecasts", None)
+            if forecasts is not None:
+                try:
+                    await asyncio.wait_for(forecasts.digest(int(time.time()*1000)), timeout=15)
+                except asyncio.CancelledError:
+                    raise
+                except Exception as exc:
+                    log.error("forecast_digest_failed", error=safe_exception(exc))
             if now - last_health >= health_every:
                 log.info("health", **service.health())
                 last_health = now
@@ -126,8 +124,6 @@ async def run_daemon(service: AnalyzerService) -> None:
     finally:
         if dashboard_runner is not None:
             await dashboard_runner.cleanup()
-        if mini_app_runner is not None:
-            await mini_app_runner.cleanup()
         with contextlib.suppress(OSError):
             write_heartbeat(runtime_heartbeat, "stopping", service)
         if retrain_task is not None:

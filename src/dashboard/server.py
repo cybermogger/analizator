@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import asyncio
 import time
 from typing import Any
 
@@ -50,6 +51,7 @@ def snapshot(service: Any) -> dict[str, Any]:
                 or float(event.get("credibility") or 0) < .7):
             continue
         events.append({
+            **(service.events.translator.view(str(event.get('summary') or '')) if hasattr(service.events,'translator') else {'summary_ru':None,'translation_status':'UNAVAILABLE'}),
             "event_id": event.get("event_id"), "event_type": event.get("event_type"),
             "summary": str(event.get("summary") or "")[:500],
             "published_at_ms": event.get("first_published_at_ms"),
@@ -89,7 +91,13 @@ def snapshot(service: Any) -> dict[str, Any]:
             "closed_at_ms": close.get("at"), "close_reason": close.get("reason"),
             "realized_net": close.get("net_pnl"),
         })
+    forecasts = getattr(service, "market_forecasts", None)
+    if forecasts and getattr(forecasts,'profit_policy',False):signals=[]
+    estimates = forecasts.forecasts() if forecasts is not None else []
     return {"as_of_ms": now, "markets": cards, "signals": signals[:10], "events": events,
+        "forecasts": estimates, "forecast_error": forecasts.last_error if forecasts else None,
+        "forecast_performance": forecasts.performance() if forecasts else None,
+        "forecast_horizons": ["5m", "15m", "1h", "2h"],
         "candidates": candidates, "paper_journal": paper_journal,
         "paper_status": "NOT_EVALUABLE", "market_count": len(cards), "event_count": len(events),
         "semantics": "Наблюдение и экспериментальные гипотезы; рейтинг покрытия не является вероятностью прибыли."}
@@ -101,7 +109,10 @@ def create_dashboard_app(service: Any) -> web.Application:
 
     async def serve(request: web.Request, name: str) -> web.Response:
         path = ROOT / name
-        response = web.FileResponse(path)
+        # Tiny static assets use a normal response. This avoids platform-specific
+        # sendfile behaviour and makes desktop restarts/cache invalidation reliable.
+        mime = {'.html':'text/html','.css':'text/css','.js':'application/javascript'}[path.suffix]
+        response = web.Response(body=await asyncio.to_thread(path.read_bytes),content_type=mime,charset='utf-8')
         response.headers["Cache-Control"] = "no-store"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Content-Security-Policy"] = "default-src 'self'; connect-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; base-uri 'none'; form-action 'none'"
@@ -118,15 +129,76 @@ def create_dashboard_app(service: Any) -> web.Application:
         response.headers["Cache-Control"] = "no-store"
         return response
 
+    async def forecasts(request: web.Request) -> web.Response:
+        engine = getattr(service, "market_forecasts", None)
+        horizon = request.query.get("horizon", "15m")
+        if horizon not in ("5m", "15m", "1h", "2h"):
+            return web.json_response({"error": "Выберите горизонт 5m, 15m, 1h или 2h"}, status=400)
+        rows = engine.forecasts(horizon) if engine else []
+        identity = request.query.get("instrument")
+        if identity:
+            rows = [row for row in rows if row["instrument_id"] == identity]
+        response = web.json_response({"forecasts": rows, "horizon": horizon})
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    async def best(request: web.Request) -> web.Response:
+        from .ranking import best_signal
+        engine=getattr(service,'market_forecasts',None)
+        horizons=('1h','2h') if engine and engine.profit_policy else ('5m','15m','1h')
+        rows=[row for horizon in horizons for row in (engine.forecasts(horizon) if engine else [])]
+        response=web.json_response(best_signal(rows,int(time.time()*1000)))
+        response.headers['Cache-Control']='no-store'
+        return response
+
+    async def x_status(request: web.Request) -> web.Response:
+        import json
+        watchlist=json.loads((ROOT.parent/'config'/'x_watchlist.json').read_text(encoding='utf-8'))
+        events=getattr(service,'events',None)
+        health=events.health() if events and hasattr(events,'health') else {}
+        source=health.get('official_x',{})
+        return web.json_response({'status':source.get('status','disabled'),'accounts':watchlist['accounts'],
+            'note':'Список для мониторинга, не количественный рейтинг. Идентичность аккаунтов ещё требует проверки по числовым ID. Без X API поток не подключён.'})
+
+    async def signal_audit(request: web.Request) -> web.Response:
+        import json
+        path=ROOT.parent/'reports'/'signal-audit.json'
+        if not path.is_file():return web.json_response({'status':'PENDING','note':'Историческая проверка ещё выполняется.'})
+        report=json.loads(await asyncio.to_thread(path.read_text,encoding='utf-8'))
+        return web.json_response(report,headers={'Cache-Control':'no-store'})
+
+    async def health(request: web.Request) -> web.Response:
+        from collections import Counter
+        from src.util.redaction import redact_sensitive_text
+        market=getattr(service,'market_data',None)
+        analysis=getattr(service,'market_analysis',None)
+        providers=market.health() if market else {}
+        return web.json_response({'providers':{name:{'status':value.get('status'),
+            'error':redact_sensitive_text(str(value.get('last_error') or ''))[:200]} for name,value in providers.items()},
+            'universe':len(market.membership) if market else 0,
+            'selection_reasons':dict(Counter(reason for row in getattr(market,'universe_snapshot',{}).get('candidates',[]) for reason in row.get('reasons',[]))),
+            'catalog':{name:{'status':state.get('status'),'count':state.get('entry_count',0),
+                'error':redact_sensitive_text(str(state.get('last_error') or ''))[:200]}
+                for name,state in getattr(market,'_catalog_state',{}).items()},
+            'analysis_cycles':getattr(analysis,'_cycles',0),
+            'analysis_error':redact_sensitive_text(str(getattr(analysis,'_last_cycle_error',None) or ''))[:200]})
+
     app.router.add_get("/", index)
     app.router.add_get("/{name:app\\.css|app\\.js}", asset)
     app.router.add_get("/api/snapshot", api)
+    app.router.add_get("/api/forecasts", forecasts)
+    app.router.add_get('/api/best',best)
+    app.router.add_get('/api/x-status',x_status)
+    app.router.add_get('/api/health',health)
+    app.router.add_get('/api/signal-audit',signal_audit)
     return app
 
 
 async def start_dashboard(service: Any, settings: dict[str, Any]) -> web.AppRunner:
     host = str(settings.get("host", "127.0.0.1"))
-    if host not in ("127.0.0.1", "localhost", "::1"):
+    if host not in ("127.0.0.1", "localhost", "::1") and not (
+        host == "0.0.0.0" and settings.get("container_loopback_proxy") is True
+    ):
         raise ValueError("dashboard must bind to loopback only until authentication is configured")
     runner = web.AppRunner(create_dashboard_app(service), access_log=None, shutdown_timeout=5)
     await runner.setup()

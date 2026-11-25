@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any
 
 import aiohttp
-from src.webapp.urls import valid_web_app_url
 
 
 class TelegramClient:
@@ -31,31 +30,6 @@ class TelegramClient:
         try:
             async with aiohttp.ClientSession(timeout=timeout) as session:
                 async with session.post(url, json={"chat_id": chat_id, "text": text, "disable_web_page_preview": True}) as response:
-                    if response.status != 200:
-                        return None
-                    payload: dict[str, Any] = await response.json()
-                    message_id = payload.get("result", {}).get("message_id") if payload.get("ok") else None
-                    return str(message_id) if message_id is not None else None
-        except (aiohttp.ClientError, TimeoutError):
-            return None
-
-    async def send_web_app_button(self, chat_id: str, url: str) -> str | None:
-        """Send a Telegram Web App launch button only for a configured HTTPS app URL."""
-        if not self.token or not chat_id or not valid_web_app_url(url):
-            return None
-        endpoint = f"https://api.telegram.org/bot{self.token}/sendMessage"
-        body = {
-            "chat_id": chat_id,
-            "text": "Откройте Hyperliquid Analyzer в Telegram Mini App.",
-            "reply_markup": {"inline_keyboard": [[{
-                "text": "Открыть Analyzer", "web_app": {"url": url}
-            }]]},
-            "disable_web_page_preview": True,
-        }
-        timeout = aiohttp.ClientTimeout(total=self.timeout)
-        try:
-            async with aiohttp.ClientSession(timeout=timeout) as session:
-                async with session.post(endpoint, json=body) as response:
                     if response.status != 200:
                         return None
                     payload: dict[str, Any] = await response.json()

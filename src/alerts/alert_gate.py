@@ -218,6 +218,15 @@ class AlertGate:
             return AlertDecision(False, None, direction, probability, "awaiting consecutive-cycle confirmation")
         else:
             self._candidates[str(signal["coin"])] = CandidateState()
+            failures = []
+            if direction not in {"LONG", "SHORT"}: failures.append("WAIT is the leading class")
+            if max(primary["LONG"], primary["SHORT"]) <= self.threshold: failures.append("direction below probability threshold")
+            if abs(primary["LONG"]-primary["SHORT"]) < self.minimum_directional_gap: failures.append("directional gap below threshold")
+            if primary["WAIT"] > self.maximum_wait: failures.append("WAIT above threshold")
+            if float(signal.get("confidence", 0)) < self.minimum_confidence: failures.append("confidence below threshold")
+            if float(signal.get("signal_strength", 0)) < self.minimum_signal_strength: failures.append("strength below threshold")
+            if int(signal.get("independent_confirmations", 0)) < self.minimum_confirmations: failures.append("insufficient active component confirmations")
+            reason = "; ".join(failures) or reason
 
         if event is None:
             return AlertDecision(False, None, direction if direction != "WAIT" else None, probability, reason)

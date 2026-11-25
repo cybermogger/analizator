@@ -23,6 +23,8 @@ class EventIntelligenceService:
         self.enabled = bool(self.config.get("enabled", False))
         self.log = structlog.get_logger("event_intelligence")
         self.repository = EventRepository(storage)
+        from src.events.translation import NewsTranslator
+        self.translator = NewsTranslator(storage)
         entities = tuple(self._entity(item) for item in self.config.get("entities", []))
         self.resolver = EntityResolver(entities)
         source_settings = dict(self.config.get("sources", {}))
@@ -92,7 +94,10 @@ class EventIntelligenceService:
         on_event = getattr(self, "on_event", None)
         if on_event is not None and not duplicate:
             try:
-                await on_event(event, int(time.time() * 1000))
+                from dataclasses import replace
+                translation = await self.translator.translate(event.summary)
+                presented = replace(event, summary=translation['summary_ru']) if translation['summary_ru'] else event
+                await on_event(presented, int(time.time() * 1000))
             except asyncio.CancelledError:
                 raise
             except Exception as exc:
@@ -142,6 +147,7 @@ class EventIntelligenceService:
             asyncio.create_task(source.run(self.ingest, self._stop), name=f"event-source:{source_id}")
             for source_id, source in self.sources.items() if source.enabled
         ]
+        self._tasks.append(asyncio.create_task(self.translator.run(self,self._stop),name='news-translation-ru'))
         try:
             while not self._stop.is_set():
                 for source in self.sources.values():

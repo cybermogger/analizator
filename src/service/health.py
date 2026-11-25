@@ -24,7 +24,7 @@ def health_snapshot(
     snapshot = {
         "assets": {coin: "configured" for coin in assets}, "ws_connected": bool(state.connected),
         "last_market_update": state.last_update_ms, "market_age_seconds": (int(time.time() * 1000) - state.last_update_ms) / 1000 if state.last_update_ms else None,
-        "last_telegram_alert": last_alert_ms, "db": storage.health(),
+        "last_telegram_alert": last_alert_ms, "db": storage.health(deep=False),
         "models": {f"{coin}/{horizon}": "MODEL_READY" for coin, horizon in model_registry.artifacts},
     }
     snapshot["providers"] = provider_health or {}

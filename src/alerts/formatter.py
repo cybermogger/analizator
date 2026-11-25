@@ -59,6 +59,7 @@ def format_signal(signal: dict[str, Any]) -> str:
     lines = [
         _heading(signal),
         f"Цена: {_price(signal['mark'])}",
+        f"Горизонт: {signal['primary_horizon']} · оценки ансамбля, калибровка итога не подтверждена",
         f"LONG {primary['LONG']:.0f}% | SHORT {primary['SHORT']:.0f}% | WAIT {primary['WAIT']:.0f}%",
         f"Confidence: {float(signal.get('confidence', 0)):.0f}/100",
         f"Signal strength: {float(signal.get('signal_strength', 0)):.0f}/100",

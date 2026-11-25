@@ -1,0 +1,705 @@
+{
+  "methodology": "Редакционный список кандидатов на основе исторической роли источников; не рейтинг измеренного влияния на цену. Профили и числовые ID требуют отдельной проверки перед аутентификацией. Наличие в списке не означает достоверность публикаций.",
+  "accounts": [
+    {
+      "handle": "elonmusk",
+      "category": "Основатели и публичные фигуры",
+      "profile_url": "https://x.com/elonmusk",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Публичные заявления, изменения политики компаний и развитие протоколов"
+    },
+    {
+      "handle": "VitalikButerin",
+      "category": "Основатели и публичные фигуры",
+      "profile_url": "https://x.com/VitalikButerin",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Публичные заявления, изменения политики компаний и развитие протоколов"
+    },
+    {
+      "handle": "cz_binance",
+      "category": "Основатели и публичные фигуры",
+      "profile_url": "https://x.com/cz_binance",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Публичные заявления, изменения политики компаний и развитие протоколов"
+    },
+    {
+      "handle": "brian_armstrong",
+      "category": "Основатели и публичные фигуры",
+      "profile_url": "https://x.com/brian_armstrong",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Публичные заявления, изменения политики компаний и развитие протоколов"
+    },
+    {
+      "handle": "saylor",
+      "category": "Основатели и публичные фигуры",
+      "profile_url": "https://x.com/saylor",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Публичные заявления, изменения политики компаний и развитие протоколов"
+    },
+    {
+      "handle": "aantonop",
+      "category": "Основатели и публичные фигуры",
+      "profile_url": "https://x.com/aantonop",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Публичные заявления, изменения политики компаний и развитие протоколов"
+    },
+    {
+      "handle": "naval",
+      "category": "Основатели и публичные фигуры",
+      "profile_url": "https://x.com/naval",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Публичные заявления, изменения политики компаний и развитие протоколов"
+    },
+    {
+      "handle": "balajis",
+      "category": "Основатели и публичные фигуры",
+      "profile_url": "https://x.com/balajis",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Публичные заявления, изменения политики компаний и развитие протоколов"
+    },
+    {
+      "handle": "jack",
+      "category": "Основатели и публичные фигуры",
+      "profile_url": "https://x.com/jack",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Публичные заявления, изменения политики компаний и развитие протоколов"
+    },
+    {
+      "handle": "adam3us",
+      "category": "Основатели и публичные фигуры",
+      "profile_url": "https://x.com/adam3us",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Публичные заявления, изменения политики компаний и развитие протоколов"
+    },
+    {
+      "handle": "NickSzabo4",
+      "category": "Основатели и публичные фигуры",
+      "profile_url": "https://x.com/NickSzabo4",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Публичные заявления, изменения политики компаний и развитие протоколов"
+    },
+    {
+      "handle": "ErikVoorhees",
+      "category": "Основатели и публичные фигуры",
+      "profile_url": "https://x.com/ErikVoorhees",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Публичные заявления, изменения политики компаний и развитие протоколов"
+    },
+    {
+      "handle": "justinsuntron",
+      "category": "Основатели и публичные фигуры",
+      "profile_url": "https://x.com/justinsuntron",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Публичные заявления, изменения политики компаний и развитие протоколов"
+    },
+    {
+      "handle": "haydenzadams",
+      "category": "Основатели и публичные фигуры",
+      "profile_url": "https://x.com/haydenzadams",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Публичные заявления, изменения политики компаний и развитие протоколов"
+    },
+    {
+      "handle": "StaniKulechov",
+      "category": "Основатели и публичные фигуры",
+      "profile_url": "https://x.com/StaniKulechov",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Публичные заявления, изменения политики компаний и развитие протоколов"
+    },
+    {
+      "handle": "aeyakovenko",
+      "category": "Основатели и публичные фигуры",
+      "profile_url": "https://x.com/aeyakovenko",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Публичные заявления, изменения политики компаний и развитие протоколов"
+    },
+    {
+      "handle": "rajgokal",
+      "category": "Основатели и публичные фигуры",
+      "profile_url": "https://x.com/rajgokal",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Публичные заявления, изменения политики компаний и развитие протоколов"
+    },
+    {
+      "handle": "IOHK_Charles",
+      "category": "Основатели и публичные фигуры",
+      "profile_url": "https://x.com/IOHK_Charles",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Публичные заявления, изменения политики компаний и развитие протоколов"
+    },
+    {
+      "handle": "GavinWood",
+      "category": "Основатели и публичные фигуры",
+      "profile_url": "https://x.com/GavinWood",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Публичные заявления, изменения политики компаний и развитие протоколов"
+    },
+    {
+      "handle": "DanLarimer",
+      "category": "Основатели и публичные фигуры",
+      "profile_url": "https://x.com/DanLarimer",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Публичные заявления, изменения политики компаний и развитие протоколов"
+    },
+    {
+      "handle": "ethereum",
+      "category": "Проекты и инфраструктура",
+      "profile_url": "https://x.com/ethereum",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Релизы, обновления сетей, сбои и решения управления"
+    },
+    {
+      "handle": "ethereumfndn",
+      "category": "Проекты и инфраструктура",
+      "profile_url": "https://x.com/ethereumfndn",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Релизы, обновления сетей, сбои и решения управления"
+    },
+    {
+      "handle": "solana",
+      "category": "Проекты и инфраструктура",
+      "profile_url": "https://x.com/solana",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Релизы, обновления сетей, сбои и решения управления"
+    },
+    {
+      "handle": "SolanaFndn",
+      "category": "Проекты и инфраструктура",
+      "profile_url": "https://x.com/SolanaFndn",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Релизы, обновления сетей, сбои и решения управления"
+    },
+    {
+      "handle": "Bitcoin",
+      "category": "Проекты и инфраструктура",
+      "profile_url": "https://x.com/Bitcoin",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Релизы, обновления сетей, сбои и решения управления"
+    },
+    {
+      "handle": "dogecoin",
+      "category": "Проекты и инфраструктура",
+      "profile_url": "https://x.com/dogecoin",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Релизы, обновления сетей, сбои и решения управления"
+    },
+    {
+      "handle": "Ripple",
+      "category": "Проекты и инфраструктура",
+      "profile_url": "https://x.com/Ripple",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Релизы, обновления сетей, сбои и решения управления"
+    },
+    {
+      "handle": "Chainlink",
+      "category": "Проекты и инфраструктура",
+      "profile_url": "https://x.com/Chainlink",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Релизы, обновления сетей, сбои и решения управления"
+    },
+    {
+      "handle": "Uniswap",
+      "category": "Проекты и инфраструктура",
+      "profile_url": "https://x.com/Uniswap",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Релизы, обновления сетей, сбои и решения управления"
+    },
+    {
+      "handle": "aave",
+      "category": "Проекты и инфраструктура",
+      "profile_url": "https://x.com/aave",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Релизы, обновления сетей, сбои и решения управления"
+    },
+    {
+      "handle": "MakerDAO",
+      "category": "Проекты и инфраструктура",
+      "profile_url": "https://x.com/MakerDAO",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Релизы, обновления сетей, сбои и решения управления"
+    },
+    {
+      "handle": "LidoFinance",
+      "category": "Проекты и инфраструктура",
+      "profile_url": "https://x.com/LidoFinance",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Релизы, обновления сетей, сбои и решения управления"
+    },
+    {
+      "handle": "arbitrum",
+      "category": "Проекты и инфраструктура",
+      "profile_url": "https://x.com/arbitrum",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Релизы, обновления сетей, сбои и решения управления"
+    },
+    {
+      "handle": "Optimism",
+      "category": "Проекты и инфраструктура",
+      "profile_url": "https://x.com/Optimism",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Релизы, обновления сетей, сбои и решения управления"
+    },
+    {
+      "handle": "base",
+      "category": "Проекты и инфраструктура",
+      "profile_url": "https://x.com/base",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Релизы, обновления сетей, сбои и решения управления"
+    },
+    {
+      "handle": "avax",
+      "category": "Проекты и инфраструктура",
+      "profile_url": "https://x.com/avax",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Релизы, обновления сетей, сбои и решения управления"
+    },
+    {
+      "handle": "NEARProtocol",
+      "category": "Проекты и инфраструктура",
+      "profile_url": "https://x.com/NEARProtocol",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Релизы, обновления сетей, сбои и решения управления"
+    },
+    {
+      "handle": "SuiNetwork",
+      "category": "Проекты и инфраструктура",
+      "profile_url": "https://x.com/SuiNetwork",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Релизы, обновления сетей, сбои и решения управления"
+    },
+    {
+      "handle": "Aptos",
+      "category": "Проекты и инфраструктура",
+      "profile_url": "https://x.com/Aptos",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Релизы, обновления сетей, сбои и решения управления"
+    },
+    {
+      "handle": "hyperliquidX",
+      "category": "Проекты и инфраструктура",
+      "profile_url": "https://x.com/hyperliquidX",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Релизы, обновления сетей, сбои и решения управления"
+    },
+    {
+      "handle": "binance",
+      "category": "Биржи и эмитенты",
+      "profile_url": "https://x.com/binance",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Листинги, ограничения торгов, резервы и стейблкоины"
+    },
+    {
+      "handle": "coinbase",
+      "category": "Биржи и эмитенты",
+      "profile_url": "https://x.com/coinbase",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Листинги, ограничения торгов, резервы и стейблкоины"
+    },
+    {
+      "handle": "krakenfx",
+      "category": "Биржи и эмитенты",
+      "profile_url": "https://x.com/krakenfx",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Листинги, ограничения торгов, резервы и стейблкоины"
+    },
+    {
+      "handle": "OKX",
+      "category": "Биржи и эмитенты",
+      "profile_url": "https://x.com/OKX",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Листинги, ограничения торгов, резервы и стейблкоины"
+    },
+    {
+      "handle": "bybit_official",
+      "category": "Биржи и эмитенты",
+      "profile_url": "https://x.com/bybit_official",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Листинги, ограничения торгов, резервы и стейблкоины"
+    },
+    {
+      "handle": "bitgetglobal",
+      "category": "Биржи и эмитенты",
+      "profile_url": "https://x.com/bitgetglobal",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Листинги, ограничения торгов, резервы и стейблкоины"
+    },
+    {
+      "handle": "kucoincom",
+      "category": "Биржи и эмитенты",
+      "profile_url": "https://x.com/kucoincom",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Листинги, ограничения торгов, резервы и стейблкоины"
+    },
+    {
+      "handle": "MEXC_Official",
+      "category": "Биржи и эмитенты",
+      "profile_url": "https://x.com/MEXC_Official",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Листинги, ограничения торгов, резервы и стейблкоины"
+    },
+    {
+      "handle": "cryptocom",
+      "category": "Биржи и эмитенты",
+      "profile_url": "https://x.com/cryptocom",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Листинги, ограничения торгов, резервы и стейблкоины"
+    },
+    {
+      "handle": "Gemini",
+      "category": "Биржи и эмитенты",
+      "profile_url": "https://x.com/Gemini",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Листинги, ограничения торгов, резервы и стейблкоины"
+    },
+    {
+      "handle": "Bitfinex",
+      "category": "Биржи и эмитенты",
+      "profile_url": "https://x.com/Bitfinex",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Листинги, ограничения торгов, резервы и стейблкоины"
+    },
+    {
+      "handle": "Bitstamp",
+      "category": "Биржи и эмитенты",
+      "profile_url": "https://x.com/Bitstamp",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Листинги, ограничения торгов, резервы и стейблкоины"
+    },
+    {
+      "handle": "Gate_io",
+      "category": "Биржи и эмитенты",
+      "profile_url": "https://x.com/Gate_io",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Листинги, ограничения торгов, резервы и стейблкоины"
+    },
+    {
+      "handle": "HTX_Global",
+      "category": "Биржи и эмитенты",
+      "profile_url": "https://x.com/HTX_Global",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Листинги, ограничения торгов, резервы и стейблкоины"
+    },
+    {
+      "handle": "tether_to",
+      "category": "Биржи и эмитенты",
+      "profile_url": "https://x.com/tether_to",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Листинги, ограничения торгов, резервы и стейблкоины"
+    },
+    {
+      "handle": "circle",
+      "category": "Биржи и эмитенты",
+      "profile_url": "https://x.com/circle",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Листинги, ограничения торгов, резервы и стейблкоины"
+    },
+    {
+      "handle": "Paxos",
+      "category": "Биржи и эмитенты",
+      "profile_url": "https://x.com/Paxos",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Листинги, ограничения торгов, резервы и стейблкоины"
+    },
+    {
+      "handle": "FDUSDOfficial",
+      "category": "Биржи и эмитенты",
+      "profile_url": "https://x.com/FDUSDOfficial",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Листинги, ограничения торгов, резервы и стейблкоины"
+    },
+    {
+      "handle": "Ledger",
+      "category": "Биржи и эмитенты",
+      "profile_url": "https://x.com/Ledger",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Листинги, ограничения торгов, резервы и стейблкоины"
+    },
+    {
+      "handle": "Paoloardoino",
+      "category": "Биржи и эмитенты",
+      "profile_url": "https://x.com/Paoloardoino",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Листинги, ограничения торгов, резервы и стейблкоины"
+    },
+    {
+      "handle": "zachxbt",
+      "category": "Данные и расследования",
+      "profile_url": "https://x.com/zachxbt",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Взломы, потоки средств, позиции и рыночная статистика"
+    },
+    {
+      "handle": "ScamSniffer",
+      "category": "Данные и расследования",
+      "profile_url": "https://x.com/ScamSniffer",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Взломы, потоки средств, позиции и рыночная статистика"
+    },
+    {
+      "handle": "lookonchain",
+      "category": "Данные и расследования",
+      "profile_url": "https://x.com/lookonchain",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Взломы, потоки средств, позиции и рыночная статистика"
+    },
+    {
+      "handle": "whale_alert",
+      "category": "Данные и расследования",
+      "profile_url": "https://x.com/whale_alert",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Взломы, потоки средств, позиции и рыночная статистика"
+    },
+    {
+      "handle": "glassnode",
+      "category": "Данные и расследования",
+      "profile_url": "https://x.com/glassnode",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Взломы, потоки средств, позиции и рыночная статистика"
+    },
+    {
+      "handle": "cryptoquant_com",
+      "category": "Данные и расследования",
+      "profile_url": "https://x.com/cryptoquant_com",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Взломы, потоки средств, позиции и рыночная статистика"
+    },
+    {
+      "handle": "santimentfeed",
+      "category": "Данные и расследования",
+      "profile_url": "https://x.com/santimentfeed",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Взломы, потоки средств, позиции и рыночная статистика"
+    },
+    {
+      "handle": "nansen_ai",
+      "category": "Данные и расследования",
+      "profile_url": "https://x.com/nansen_ai",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Взломы, потоки средств, позиции и рыночная статистика"
+    },
+    {
+      "handle": "arkham",
+      "category": "Данные и расследования",
+      "profile_url": "https://x.com/arkham",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Взломы, потоки средств, позиции и рыночная статистика"
+    },
+    {
+      "handle": "defillama",
+      "category": "Данные и расследования",
+      "profile_url": "https://x.com/defillama",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Взломы, потоки средств, позиции и рыночная статистика"
+    },
+    {
+      "handle": "DuneAnalytics",
+      "category": "Данные и расследования",
+      "profile_url": "https://x.com/DuneAnalytics",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Взломы, потоки средств, позиции и рыночная статистика"
+    },
+    {
+      "handle": "Token_Unlocks",
+      "category": "Данные и расследования",
+      "profile_url": "https://x.com/Token_Unlocks",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Взломы, потоки средств, позиции и рыночная статистика"
+    },
+    {
+      "handle": "CertiK",
+      "category": "Данные и расследования",
+      "profile_url": "https://x.com/CertiK",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Взломы, потоки средств, позиции и рыночная статистика"
+    },
+    {
+      "handle": "PeckShieldAlert",
+      "category": "Данные и расследования",
+      "profile_url": "https://x.com/PeckShieldAlert",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Взломы, потоки средств, позиции и рыночная статистика"
+    },
+    {
+      "handle": "SlowMist_Team",
+      "category": "Данные и расследования",
+      "profile_url": "https://x.com/SlowMist_Team",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Взломы, потоки средств, позиции и рыночная статистика"
+    },
+    {
+      "handle": "chainalysis",
+      "category": "Данные и расследования",
+      "profile_url": "https://x.com/chainalysis",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Взломы, потоки средств, позиции и рыночная статистика"
+    },
+    {
+      "handle": "TRMLabs",
+      "category": "Данные и расследования",
+      "profile_url": "https://x.com/TRMLabs",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Взломы, потоки средств, позиции и рыночная статистика"
+    },
+    {
+      "handle": "MessariCrypto",
+      "category": "Данные и расследования",
+      "profile_url": "https://x.com/MessariCrypto",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Взломы, потоки средств, позиции и рыночная статистика"
+    },
+    {
+      "handle": "kaiko",
+      "category": "Данные и расследования",
+      "profile_url": "https://x.com/kaiko",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Взломы, потоки средств, позиции и рыночная статистика"
+    },
+    {
+      "handle": "intotheblock",
+      "category": "Данные и расследования",
+      "profile_url": "https://x.com/intotheblock",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Взломы, потоки средств, позиции и рыночная статистика"
+    },
+    {
+      "handle": "CoinDesk",
+      "category": "Новости, фонды и регуляторы",
+      "profile_url": "https://x.com/CoinDesk",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Новости, ETF, регулирование, макроэкономика и институциональные решения"
+    },
+    {
+      "handle": "Cointelegraph",
+      "category": "Новости, фонды и регуляторы",
+      "profile_url": "https://x.com/Cointelegraph",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Новости, ETF, регулирование, макроэкономика и институциональные решения"
+    },
+    {
+      "handle": "TheBlock__",
+      "category": "Новости, фонды и регуляторы",
+      "profile_url": "https://x.com/TheBlock__",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Новости, ETF, регулирование, макроэкономика и институциональные решения"
+    },
+    {
+      "handle": "WuBlockchain",
+      "category": "Новости, фонды и регуляторы",
+      "profile_url": "https://x.com/WuBlockchain",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Новости, ETF, регулирование, макроэкономика и институциональные решения"
+    },
+    {
+      "handle": "tier10k",
+      "category": "Новости, фонды и регуляторы",
+      "profile_url": "https://x.com/tier10k",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Новости, ETF, регулирование, макроэкономика и институциональные решения"
+    },
+    {
+      "handle": "BitcoinMagazine",
+      "category": "Новости, фонды и регуляторы",
+      "profile_url": "https://x.com/BitcoinMagazine",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Новости, ETF, регулирование, макроэкономика и институциональные решения"
+    },
+    {
+      "handle": "decryptmedia",
+      "category": "Новости, фонды и регуляторы",
+      "profile_url": "https://x.com/decryptmedia",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Новости, ETF, регулирование, макроэкономика и институциональные решения"
+    },
+    {
+      "handle": "Blockworks_",
+      "category": "Новости, фонды и регуляторы",
+      "profile_url": "https://x.com/Blockworks_",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Новости, ETF, регулирование, макроэкономика и институциональные решения"
+    },
+    {
+      "handle": "SECGov",
+      "category": "Новости, фонды и регуляторы",
+      "profile_url": "https://x.com/SECGov",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Новости, ETF, регулирование, макроэкономика и институциональные решения"
+    },
+    {
+      "handle": "CFTC",
+      "category": "Новости, фонды и регуляторы",
+      "profile_url": "https://x.com/CFTC",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Новости, ETF, регулирование, макроэкономика и институциональные решения"
+    },
+    {
+      "handle": "federalreserve",
+      "category": "Новости, фонды и регуляторы",
+      "profile_url": "https://x.com/federalreserve",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Новости, ETF, регулирование, макроэкономика и институциональные решения"
+    },
+    {
+      "handle": "USTreasury",
+      "category": "Новости, фонды и регуляторы",
+      "profile_url": "https://x.com/USTreasury",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Новости, ETF, регулирование, макроэкономика и институциональные решения"
+    },
+    {
+      "handle": "WhiteHouse",
+      "category": "Новости, фонды и регуляторы",
+      "profile_url": "https://x.com/WhiteHouse",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Новости, ETF, регулирование, макроэкономика и институциональные решения"
+    },
+    {
+      "handle": "BlackRock",
+      "category": "Новости, фонды и регуляторы",
+      "profile_url": "https://x.com/BlackRock",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Новости, ETF, регулирование, макроэкономика и институциональные решения"
+    },
+    {
+      "handle": "Fidelity",
+      "category": "Новости, фонды и регуляторы",
+      "profile_url": "https://x.com/Fidelity",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Новости, ETF, регулирование, макроэкономика и институциональные решения"
+    },
+    {
+      "handle": "Grayscale",
+      "category": "Новости, фонды и регуляторы",
+      "profile_url": "https://x.com/Grayscale",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Новости, ETF, регулирование, макроэкономика и институциональные решения"
+    },
+    {
+      "handle": "a16zcrypto",
+      "category": "Новости, фонды и регуляторы",
+      "profile_url": "https://x.com/a16zcrypto",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Новости, ETF, регулирование, макроэкономика и институциональные решения"
+    },
+    {
+      "handle": "Paradigm",
+      "category": "Новости, фонды и регуляторы",
+      "profile_url": "https://x.com/Paradigm",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Новости, ETF, регулирование, макроэкономика и институциональные решения"
+    },
+    {
+      "handle": "PanteraCapital",
+      "category": "Новости, фонды и регуляторы",
+      "profile_url": "https://x.com/PanteraCapital",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Новости, ETF, регулирование, макроэкономика и институциональные решения"
+    },
+    {
+      "handle": "coincenter",
+      "category": "Новости, фонды и регуляторы",
+      "profile_url": "https://x.com/coincenter",
+      "identity_status": "PENDING_ID_VERIFICATION",
+      "rationale": "Новости, ETF, регулирование, макроэкономика и институциональные решения"
+    }
+  ]
+}

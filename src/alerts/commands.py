@@ -15,7 +15,7 @@ from .formatter import (
 
 
 HELP_TEXT = """Команды Hyperliquid Analyzer:
-/app — открыть Telegram Mini App
+/site — адрес локального сайта
 /status — последние SOL и HYPE snapshots
 /sol — принудительный актуальный анализ SOL
 /hype — принудительный актуальный анализ HYPE
@@ -121,23 +121,13 @@ class TelegramCommandService:
         signal = next((item for item in signals if item["coin"] == coin), None)
         return [format_signal(signal)] if signal else [f"⚠️ {coin}: свежий анализ недоступен"]
 
-    async def send_app_launch(self, chat_id: str) -> None:
-        from src.webapp.urls import valid_web_app_url
-
-        url = self.analyzer.config.get("mini_app", {}).get("public_url")
-        if not valid_web_app_url(url):
-            await self.telegram.send_to(
-                chat_id,
-                "Mini App не настроен. Укажите свой публичный HTTPS URL вида "
-                "https://ваш-домен/app/ в TELEGRAM_MINI_APP_URL и настройте домен в Telegram.",
-            )
-        elif await self.telegram.send_web_app_button(chat_id, url) is None:
-            await self.telegram.send_to(chat_id, "Не удалось отправить кнопку Mini App. Проверьте конфигурацию Telegram.")
-
     async def handle(self, command: str) -> list[str]:
         parts = command.strip().split(maxsplit=1)
         argument = parts[1].strip() if len(parts) > 1 else ""
         command = parts[0].lower().split("@", 1)[0]
+        if command == "/site":
+            port = self.analyzer.config.get("dashboard", {}).get("port", 8081)
+            return [f"Сайт на компьютере с анализатором: http://127.0.0.1:{port}/"]
         if command == "/help":
             return [HELP_TEXT]
         if command in {"/sol", "/hype"}:
@@ -360,9 +350,6 @@ class TelegramCommandService:
                     continue
                 try:
                     command_name = text.split(maxsplit=1)[0].lower().split("@", 1)[0]
-                    if command_name == "/app":
-                        await self.send_app_launch(chat_id)
-                        continue
                     for response in await self.handle(text):
                         await self.telegram.send_to(chat_id, response)
                 except asyncio.CancelledError:

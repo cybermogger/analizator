@@ -151,7 +151,7 @@ class DynamicUniverse:
             bucket_items = [pair for pair in selected if pair[0].bucket == bucket]
             # Symbol diversity only controls selection priority. It never joins
             # instruments or establishes cross-venue asset identity.
-            passes = (True, False) if bucket is UniverseBucket.LIQUID_SPOT_CANDIDATES else (False,)
+            passes = (True, False)
             seen_bases: set[str] = set()
             for unique_base_only in passes:
                 for item, _ in bucket_items:
